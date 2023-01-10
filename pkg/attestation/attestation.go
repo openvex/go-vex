@@ -21,7 +21,7 @@ import (
 	"github.com/sigstore/sigstore/pkg/signature/dsse"
 	signatureoptions "github.com/sigstore/sigstore/pkg/signature/options"
 
-	"chainguard.dev/vex/pkg/vex"
+	"github.com/openvex/vex/pkg/vex"
 )
 
 type Attestation struct {
