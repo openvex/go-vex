@@ -12,7 +12,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"chainguard.dev/vex/pkg/vex"
+	"github.com/openvex/vex/pkg/vex"
 )
 
 func TestSerialize(t *testing.T) {
