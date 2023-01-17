@@ -28,7 +28,7 @@ const (
 	// statements].
 	//
 	// [in-toto statements]: https://github.com/in-toto/attestation/blob/main/spec/README.md#statement
-	TypeURI = "text/vex"
+	TypeURI = "https://openvex.dev/ns"
 
 	// DefaultAuthor is the default value for a document's Author field.
 	DefaultAuthor = "Unknown Author"
