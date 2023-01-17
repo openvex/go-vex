@@ -20,7 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
-	"github.com/openvex/vex/pkg/csaf"
+	"github.com/openvex/go-vex/pkg/csaf"
 )
 
 const (
