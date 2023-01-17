@@ -1,5 +1,5 @@
 /*
-Copyright 2022 Chainguard, Inc.
+Copyright 2023 The OpenVEX Authors
 SPDX-License-Identifier: Apache-2.0
 */
 
@@ -20,7 +20,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
-	"github.com/openvex/vex/pkg/csaf"
+	"github.com/openvex/go-vex/pkg/csaf"
 )
 
 const (

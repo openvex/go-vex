@@ -1,5 +1,5 @@
 /*
-Copyright 2022 Chainguard, Inc.
+Copyright 2023 The OpenVEX Authors
 SPDX-License-Identifier: Apache-2.0
 */
 
@@ -12,7 +12,7 @@ import (
 
 	intoto "github.com/in-toto/in-toto-golang/in_toto"
 
-	"github.com/openvex/vex/pkg/vex"
+	"github.com/openvex/go-vex/pkg/vex"
 )
 
 type Attestation struct {

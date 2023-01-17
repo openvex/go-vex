@@ -20,7 +20,7 @@ package main
 import (
 	"os"
 
-	"github.com/openvex/vex/pkg/vex"
+	"github.com/openvex/go-vex/pkg/vex"
 )
 
 func main() {

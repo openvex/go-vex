@@ -1,4 +1,4 @@
-module github.com/openvex/vex
+module github.com/openvex/go-vex
 
 go 1.19
 
