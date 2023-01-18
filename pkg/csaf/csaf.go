@@ -96,15 +96,18 @@ type Product struct {
 // Open reads and parses a given file path and returns a CSAF document
 // or an error if the file could not be opened or parsed.
 func Open(path string) (*CSAF, error) {
-	data, err := os.ReadFile(path)
+	fh, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("opening CSAF document: %w", err)
+		return nil, fmt.Errorf("csaf: failed to open document: %w", err)
 	}
+	defer fh.Close()
 
 	csafDoc := &CSAF{}
-	if err := json.Unmarshal(data, csafDoc); err != nil {
-		return nil, fmt.Errorf("unmarshalling CSAF document: %w", err)
+	err = json.NewDecoder(fh).Decode(csafDoc)
+	if err != nil {
+		return nil, fmt.Errorf("csaf: failed to decode document: %w", err)
 	}
+
 	return csafDoc, nil
 }
 
