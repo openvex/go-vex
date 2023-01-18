@@ -71,7 +71,7 @@ func (branch *ProductBranch) FindFirstProduct() string {
 		return branch.Product.ID
 	}
 
-	// No noested branches
+	// No nested branches
 	if branch.Branches == nil {
 		return ""
 	}
@@ -85,7 +85,7 @@ func (branch *ProductBranch) FindFirstProduct() string {
 	return ""
 }
 
-// FindFirstProduct recursively searches for the first product in the tree
+// FindProductIdentifier recursively searches for the first product identifier in the tree
 func (branch *ProductBranch) FindProductIdentifier(helperType, helperValue string) *Product {
 	if len(branch.Product.IdentificationHelper) != 0 {
 		for k := range branch.Product.IdentificationHelper {
@@ -98,7 +98,7 @@ func (branch *ProductBranch) FindProductIdentifier(helperType, helperValue strin
 		}
 	}
 
-	// No noested branches
+	// No nested branches
 	if branch.Branches == nil {
 		return nil
 	}

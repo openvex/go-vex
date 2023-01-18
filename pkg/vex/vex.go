@@ -322,8 +322,11 @@ func (vexDoc *VEX) GenerateCanonicalID() (string, error) {
 	return vexDoc.ID, nil
 }
 
+// DateFromEnv returns a time object representing the time specified in the
+// `SOURCE_DATE_EPOCH` environment variable, whose value can be specified as
+// either UNIX seconds or as a RFC3339 value.
 func DateFromEnv() (*time.Time, error) {
-	// Support envvar for reproducible vexing
+	// Support env var for reproducible vexing
 	d := os.Getenv("SOURCE_DATE_EPOCH")
 	if d == "" {
 		return nil, nil
@@ -336,7 +339,7 @@ func DateFromEnv() (*time.Time, error) {
 	} else {
 		t, err = time.Parse(time.RFC3339, d)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse envvar SOURCE_DATE_EPOCH: %w", err)
+			return nil, fmt.Errorf("failed to parse env var SOURCE_DATE_EPOCH: %w", err)
 		}
 	}
 	return &t, nil
