@@ -12,7 +12,9 @@ import (
 	"time"
 )
 
-// A Statement is a declaration conveying a single [status] for a single [vul_id] for one or more [product_id]s. A VEX Statement exists within a VEX Document.
+// A Statement is a declaration conveying a single [status] for a single
+// [vul_id] for one or more [product_id]s. A VEX Statement exists within a VEX
+// Document.
 type Statement struct {
 	// [vul_id] SHOULD use existing and well known identifiers, for example:
 	// CVE, the Global Security Database (GSD), or a supplier’s vulnerability
