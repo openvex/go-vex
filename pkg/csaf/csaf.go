@@ -139,8 +139,7 @@ func (branch *ProductBranch) FindFirstProduct() string {
 	return ""
 }
 
-// FindFirstProduct recursively searches for the first product in the tree
-// and returns it or nil if no product is found.
+// FindProductIdentifier recursively searches for the first product identifier in the tree
 func (branch *ProductBranch) FindProductIdentifier(helperType, helperValue string) *Product {
 	if len(branch.Product.IdentificationHelper) != 0 {
 		for k := range branch.Product.IdentificationHelper {
