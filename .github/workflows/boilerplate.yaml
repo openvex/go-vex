@@ -5,7 +5,9 @@ name: Boilerplate
 
 on:
   pull_request:
-    branches: [ 'main', 'release-*' ]
+    branches:
+      - 'main'
+      - 'release-*'
 
 jobs:
 
@@ -16,24 +18,24 @@ jobs:
       fail-fast: false # Keep running if one leg fails.
       matrix:
         extension:
-        - go
-        - sh
-        - yaml
+          - go
+          - sh
+          - yaml
 
         # Map between extension and human-readable name.
         include:
-        - extension: go
-          language: Go
-        - extension: sh
-          language: Bash
-        - extension: yaml
-          language: YAML
-        - extension: yml
-          language: YAML
+          - extension: go
+            language: Go
+          - extension: sh
+            language: Bash
+          - extension: yaml
+            language: YAML
+          - extension: yml
+            language: YAML
 
     steps:
       - name: Check out code
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
 
       - uses: chainguard-dev/actions/boilerplate@main
         with:
