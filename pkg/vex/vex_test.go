@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 package vex
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 	"time"
@@ -27,6 +28,36 @@ func TestLoadCSAF(t *testing.T) {
 	require.Equal(t, vexDoc.Statements[0].Vulnerability, "CVE-2009-4487")
 	require.Equal(t, vexDoc.Statements[0].Status, StatusNotAffected)
 	require.Equal(t, vexDoc.Metadata.ID, "2022-EVD-UC-01-NA-001")
+}
+
+func TestLoadHCL(t *testing.T) {
+	vexDoc, err := OpenHCL("testdata/vex.hcl")
+	require.NoError(t, err)
+
+	require.Len(t, vexDoc.Statements, 1)
+}
+
+func TestToHCL(t *testing.T) {
+	vexDoc := genTestDoc(t)
+
+	b := bytes.NewBuffer(nil)
+
+	err := vexDoc.ToHCL(b)
+	require.NoError(t, err)
+
+	/*
+		title       = "John Doe"
+		author_role = "VEX Writer Extraordinaire"
+		version     = "1"
+		timestamp   = "2022-12-22T16:36:43-05:00"
+		tooling     = "OpenVEX"
+		supplier    = "Chainguard Inc"
+		statement "CVE-1234-5678" {
+			products      = ["pkg:apk/wolfi/bash@1.0.0"]
+			status        = "under_investigation"
+		}
+	*/
+	t.Log(b.String())
 }
 
 func genTestDoc(t *testing.T) VEX {
