@@ -1,12 +1,18 @@
-# OpenVEX: Go module to generate and work with VEX documents
+# go-vex
 
-This repository contains the OpenVEX go source code. This module lets 
+Go library for generating, consuming, and operating on VEX documents
+
+[![Build Status](https://github.com/openvex/go-vex/actions/workflows/ci-build-test.yaml/badge.svg?branch=main)](https://github.com/openvex/go-vex/actions/workflows/ci-build-test.yaml?query=branch%3Amain)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/openvex/go-vex)](https://pkg.go.dev/github.com/openvex/go-vex)
+[![Go Report Card](https://goreportcard.com/badge/github.com/openvex/go-vex)](https://goreportcard.com/report/github.com/openvex/go-vex)
+
+This repository contains the OpenVEX Go source code. This module lets 
 authors create, modify and manage VEX documents.
 
-The full documentation of this moule can be found on 
-[pkg.go.dev/openvex](pkg.go.dev/openvex/vex).
+The full documentation for this module can be found at 
+https://pkg.go.dev/github.com/openvex/go-vex.
 
-For more information about VEX and the OpenVEX implementation check out the
+For more information about the OpenVEX specification implemented by this module, check out the
 [OpenVEX specification](https://github.com/openvex/spec/blob/main/OPENVEX-SPEC.md).
 
 
