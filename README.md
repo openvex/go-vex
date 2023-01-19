@@ -15,6 +15,13 @@ https://pkg.go.dev/github.com/openvex/go-vex.
 For more information about the OpenVEX specification implemented by this module, check out the
 [OpenVEX specification](https://github.com/openvex/spec/blob/main/OPENVEX-SPEC.md).
 
+## Installing
+
+Run `go get` to install the latest version of the library.
+
+```console
+go get -u github.com/openvex/go-vex@latest
+```
 
 ## Example Usage: Generate a VEX Document
 
