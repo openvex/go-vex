@@ -44,3 +44,15 @@ func TestFindByHelper(t *testing.T) {
 	require.NotNil(t, prod)
 	require.Equal(t, prod.ID, "CSAFPID-0001")
 }
+
+func TestListProducts(t *testing.T) {
+	doc, err := Open("testdata/csaf.json")
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+	prods := doc.ProductTree.Branches[0].Branches[0].Branches[0].ListProducts()
+	require.Len(t, prods, 1)
+
+	allProds := doc.ProductTree.Branches[0].ListProducts()
+	require.NotNil(t, allProds)
+	require.Len(t, allProds, 2)
+}
