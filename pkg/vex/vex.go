@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 package vex
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -44,6 +45,8 @@ const (
 
 	// NoActionStatementMsg is the action statement that informs that there is no action statement :/
 	NoActionStatementMsg = "No action statement provided"
+
+	errMsgParse = "error"
 )
 
 // The VEX type represents a VEX document and all of its contained information.
@@ -118,9 +121,13 @@ func Load(path string) (*VEX, error) {
 		return nil, fmt.Errorf("loading VEX file: %w", err)
 	}
 
+	return Parse(data)
+}
+
+func Parse(data []byte) (*VEX, error) {
 	vexDoc := &VEX{}
 	if err := json.Unmarshal(data, vexDoc); err != nil {
-		return nil, fmt.Errorf("unmarshaling VEX document: %w", err)
+		return nil, fmt.Errorf("%s: %w", errMsgParse, err)
 	}
 	return vexDoc, nil
 }
@@ -188,6 +195,32 @@ func SortDocuments(docs []*VEX) []*VEX {
 		return docs[i].Timestamp.Before(*(docs[j].Timestamp))
 	})
 	return docs
+}
+
+// Open tries to autodetect the vex format and open it
+func Open(path string) (*VEX, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("opening VEX file: %w", err)
+	}
+
+	doc, err := Parse(data)
+	if err != nil {
+		if !strings.Contains(err.Error(), errMsgParse) {
+			return nil, err
+		}
+	} else {
+		return doc, nil
+	}
+
+	if bytes.Contains(data, []byte(`"csaf_version"`)) {
+		doc, err := OpenCSAF(path, []string{})
+		if err != nil {
+			return nil, fmt.Errorf("attempting to open csaf doc: %w", err)
+		}
+		return doc, nil
+	}
+	return nil, errors.New("unable to detect VEX document format")
 }
 
 // OpenCSAF opens a CSAF document and builds a VEX object from it.
