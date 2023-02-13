@@ -231,18 +231,31 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 	}
 
 	productDict := map[string]string{}
+	filterDict := map[string]string{}
 	for _, pid := range products {
-		productDict[pid] = pid
+		filterDict[pid] = pid
 	}
 
-	// If no products were specified, we use the first one
-	if len(products) == 0 {
-		p := csafDoc.FirstProductName()
-		if p == "" {
-			// Error? I think so.
-			return nil, errors.New("unable to find a product ID in CSAF document")
+	prods := csafDoc.ProductTree.ListProducts()
+	for _, sp := range prods {
+		// Check if we need to filter
+		if len(filterDict) > 0 {
+			foundID := false
+			for _, i := range sp.IdentificationHelper {
+				if _, ok := filterDict[i]; ok {
+					foundID = true
+					break
+				}
+			}
+			_, ok := filterDict[sp.ID]
+			if !foundID && !ok {
+				continue
+			}
 		}
-		productDict[p] = p
+		productDict[sp.ID] = sp.ID
+		for _, h := range sp.IdentificationHelper {
+			productDict[h] = sp.ID
+		}
 	}
 
 	// Create the vex doc
