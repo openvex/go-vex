@@ -48,7 +48,10 @@
                 "name": "4.2",
                 "product": {
                   "name": "Example Company ABC 4.2",
-                  "product_id": "CSAFPID-0001"
+                  "product_id": "CSAFPID-0001",
+                  "product_identification_helper": {
+                    "purl": "pkg:golang/github.com/go-homedir@v1.2.0"             
+                  }
                 }
               }
             ],

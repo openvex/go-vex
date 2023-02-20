@@ -51,6 +51,7 @@ func TestListProducts(t *testing.T) {
 	require.NotNil(t, doc)
 	prods := doc.ProductTree.Branches[0].Branches[0].Branches[0].ListProducts()
 	require.Len(t, prods, 1)
+	require.Equal(t, prods[0].IdentificationHelper["purl"], "pkg:golang/github.com/go-homedir@v1.1.0")
 
 	allProds := doc.ProductTree.Branches[0].ListProducts()
 	require.NotNil(t, allProds)
