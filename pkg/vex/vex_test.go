@@ -161,3 +161,19 @@ func TestGenerateCanonicalID(t *testing.T) {
 		require.Equal(t, tc.expectedID, id)
 	}
 }
+
+func TestOpenCSAF(t *testing.T) {
+	for _, tc := range []struct {
+		doc string
+		len int
+		id  []string
+	}{
+		{"testdata/csaf.json", 1, []string{"CSAFPID-0001"}},
+		{"testdata/csaf.json", 1, []string{"pkg:golang/github.com/go-homedir@v1.2.0"}},
+	} {
+		doc, err := OpenCSAF(tc.doc, tc.id)
+		require.NoError(t, err)
+		require.NotNil(t, doc)
+		require.Len(t, doc.Statements, tc.len)
+	}
+}
