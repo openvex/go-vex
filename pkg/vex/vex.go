@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -204,15 +203,6 @@ func Open(path string) (*VEX, error) {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
 	}
 
-	doc, err := Parse(data)
-	if err != nil {
-		if !strings.Contains(err.Error(), errMsgParse) {
-			return nil, err
-		}
-	} else {
-		return doc, nil
-	}
-
 	if bytes.Contains(data, []byte(`"csaf_version"`)) {
 		doc, err := OpenCSAF(path, []string{})
 		if err != nil {
@@ -220,7 +210,12 @@ func Open(path string) (*VEX, error) {
 		}
 		return doc, nil
 	}
-	return nil, errors.New("unable to detect VEX document format")
+
+	doc, err := Parse(data)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
 }
 
 // OpenCSAF opens a CSAF document and builds a VEX object from it.
@@ -252,7 +247,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 				continue
 			}
 		}
-		//productDict[sp.ID] = sp.ID
+
 		for _, h := range sp.IdentificationHelper {
 			productDict[sp.ID] = h
 		}
