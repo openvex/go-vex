@@ -252,9 +252,9 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 				continue
 			}
 		}
-		productDict[sp.ID] = sp.ID
+		//productDict[sp.ID] = sp.ID
 		for _, h := range sp.IdentificationHelper {
-			productDict[h] = sp.ID
+			productDict[sp.ID] = h
 		}
 	}
 
@@ -295,7 +295,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 						Status:          StatusFromCSAF(status),
 						Justification:   "", // Justifications are not machine readable in csaf, it seems
 						ActionStatement: just,
-						Products:        products,
+						Products:        []string{productDict[productID]},
 					})
 				}
 			}
