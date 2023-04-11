@@ -24,6 +24,7 @@ func TestLoadCSAF(t *testing.T) {
 	vexDoc, err := OpenCSAF("testdata/csaf.json", []string{})
 	require.NoError(t, err)
 	require.Len(t, vexDoc.Statements, 1)
+	require.Len(t, vexDoc.Statements[0].Products, 1)
 	require.Equal(t, vexDoc.Statements[0].Vulnerability, "CVE-2009-4487")
 	require.Equal(t, vexDoc.Statements[0].Status, StatusNotAffected)
 	require.Equal(t, vexDoc.Metadata.ID, "2022-EVD-UC-01-NA-001")
@@ -159,5 +160,21 @@ func TestGenerateCanonicalID(t *testing.T) {
 		id, err := doc.GenerateCanonicalID()
 		require.NoError(t, err)
 		require.Equal(t, tc.expectedID, id)
+	}
+}
+
+func TestOpenCSAF(t *testing.T) {
+	for _, tc := range []struct {
+		doc string
+		len int
+		id  []string
+	}{
+		{"testdata/csaf.json", 1, []string{"CSAFPID-0001"}},
+		{"testdata/csaf.json", 1, []string{"pkg:golang/github.com/go-homedir@v1.2.0"}},
+	} {
+		doc, err := OpenCSAF(tc.doc, tc.id)
+		require.NoError(t, err)
+		require.NotNil(t, doc)
+		require.Len(t, doc.Statements, tc.len)
 	}
 }

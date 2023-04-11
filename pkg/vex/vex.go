@@ -6,9 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 package vex
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -44,6 +44,8 @@ const (
 
 	// NoActionStatementMsg is the action statement that informs that there is no action statement :/
 	NoActionStatementMsg = "No action statement provided"
+
+	errMsgParse = "error"
 )
 
 // The VEX type represents a VEX document and all of its contained information.
@@ -118,9 +120,13 @@ func Load(path string) (*VEX, error) {
 		return nil, fmt.Errorf("loading VEX file: %w", err)
 	}
 
+	return Parse(data)
+}
+
+func Parse(data []byte) (*VEX, error) {
 	vexDoc := &VEX{}
 	if err := json.Unmarshal(data, vexDoc); err != nil {
-		return nil, fmt.Errorf("unmarshaling VEX document: %w", err)
+		return nil, fmt.Errorf("%s: %w", errMsgParse, err)
 	}
 	return vexDoc, nil
 }
@@ -190,6 +196,28 @@ func SortDocuments(docs []*VEX) []*VEX {
 	return docs
 }
 
+// Open tries to autodetect the vex format and open it
+func Open(path string) (*VEX, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("opening VEX file: %w", err)
+	}
+
+	if bytes.Contains(data, []byte(`"csaf_version"`)) {
+		doc, err := OpenCSAF(path, []string{})
+		if err != nil {
+			return nil, fmt.Errorf("attempting to open csaf doc: %w", err)
+		}
+		return doc, nil
+	}
+
+	doc, err := Parse(data)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
 // OpenCSAF opens a CSAF document and builds a VEX object from it.
 func OpenCSAF(path string, products []string) (*VEX, error) {
 	csafDoc, err := csaf.Open(path)
@@ -198,18 +226,31 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 	}
 
 	productDict := map[string]string{}
+	filterDict := map[string]string{}
 	for _, pid := range products {
-		productDict[pid] = pid
+		filterDict[pid] = pid
 	}
 
-	// If no products were specified, we use the first one
-	if len(products) == 0 {
-		p := csafDoc.FirstProductName()
-		if p == "" {
-			// Error? I think so.
-			return nil, errors.New("unable to find a product ID in CSAF document")
+	prods := csafDoc.ProductTree.ListProducts()
+	for _, sp := range prods {
+		// Check if we need to filter
+		if len(filterDict) > 0 {
+			foundID := false
+			for _, i := range sp.IdentificationHelper {
+				if _, ok := filterDict[i]; ok {
+					foundID = true
+					break
+				}
+			}
+			_, ok := filterDict[sp.ID]
+			if !foundID && !ok {
+				continue
+			}
 		}
-		productDict[p] = p
+
+		for _, h := range sp.IdentificationHelper {
+			productDict[sp.ID] = h
+		}
 	}
 
 	// Create the vex doc
@@ -249,7 +290,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 						Status:          StatusFromCSAF(status),
 						Justification:   "", // Justifications are not machine readable in csaf, it seems
 						ActionStatement: just,
-						Products:        products,
+						Products:        []string{productDict[productID]},
 					})
 				}
 			}

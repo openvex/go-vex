@@ -166,3 +166,52 @@ func (branch *ProductBranch) FindProductIdentifier(helperType, helperValue strin
 
 	return nil
 }
+
+type ProductList []Product
+
+// Add adds a prodocut to the product list if its not there, matching id and
+// software identifiers.
+func (pl *ProductList) Add(p Product) {
+	if p.ID == "" && len(p.IdentificationHelper) == 0 {
+		return
+	}
+	helpers := map[string]struct{}{}
+
+	for _, ih := range p.IdentificationHelper {
+		helpers[ih] = struct{}{}
+	}
+	for _, tp := range *pl {
+		if tp.ID == p.ID {
+			return
+		}
+		for _, idhelper := range tp.IdentificationHelper {
+			if _, ok := helpers[idhelper]; ok {
+				return
+			}
+		}
+	}
+	*pl = append(ProductList{p}, *pl...)
+}
+
+// ListProducts returns a flat list of all products in the branch
+func (branch *ProductBranch) ListProducts() ProductList {
+	list := ProductList{}
+	list.Add(branch.Product)
+	for _, b := range branch.Branches {
+		for _, p := range b.ListProducts() {
+			list.Add(p)
+		}
+	}
+	return list
+}
+
+func (csafDoc *CSAF) ListProducts() ProductList {
+	prods := ProductList{}
+	for _, b := range csafDoc.ProductTree.Branches {
+		brachProds := b.ListProducts()
+		for _, sp := range brachProds {
+			prods.Add(sp)
+		}
+	}
+	return prods
+}
