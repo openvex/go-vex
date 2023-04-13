@@ -62,6 +62,11 @@ type Vulnerability struct {
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32314-vulnerabilities-property---threats
 	Threats []ThreatData `json:"threats"`
+
+	// Machine readable flags for products related to vulnerability
+	//
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3235-vulnerabilities-property---flags
+	Flags []Flag `json:"flags"`
 }
 
 // ThreatData contains information about a threat to a product.
@@ -70,6 +75,17 @@ type Vulnerability struct {
 type ThreatData struct {
 	Category   string   `json:"category"`
 	Details    string   `json:"details"`
+	ProductIDs []string `json:"product_ids"`
+}
+
+
+// Machine readable flags for products related to the Vulnerability
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3235-vulnerabilities-property---flags
+type Flag struct {
+	Label string `json:"label"`
+	Date time.Time `json:"date"`
+	Groups []string `json:"group_ids"`
 	ProductIDs []string `json:"product_ids"`
 }
 
