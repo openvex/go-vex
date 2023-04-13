@@ -78,10 +78,22 @@ type ThreatData struct {
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3221-product-tree-property---branches
 type ProductBranch struct {
-	Category string          `json:"category"`
-	Name     string          `json:"name"`
-	Branches []ProductBranch `json:"branches"`
-	Product  Product         `json:"product,omitempty"`
+	Category      string          `json:"category"`
+	Name          string          `json:"name"`
+	Branches      []ProductBranch `json:"branches"`
+	Product       Product         `json:"product,omitempty"`
+	Relationships []Relationship  `json:"relationships"`
+}
+
+// Relationship establishes a link between two existing full_product_name_t elements, allowing
+// the document producer to define a combination of two products that form a new full_product_name entry.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3224-product-tree-property---relationships
+type Relationship struct {
+	Category            string  `json:"category"`
+	FullProductName     Product `json:"full_product_name"`
+	ProductRef          string  `json:"product_reference"`
+	RelatesToProductRef string  `json:"relates_to_product_reference"`
 }
 
 // Product contains information used to identify a product.
