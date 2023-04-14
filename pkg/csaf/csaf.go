@@ -63,6 +63,11 @@ type Vulnerability struct {
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32314-vulnerabilities-property---threats
 	Threats []ThreatData `json:"threats"`
 
+	// Provide details of remediations associated with a Vulnerability
+	//
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32312-vulnerabilities-property---remediations
+	Remediations []RemediationData `json:"remediations"`
+
 	// Machine readable flags for products related to vulnerability
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3235-vulnerabilities-property---flags
@@ -78,15 +83,35 @@ type ThreatData struct {
 	ProductIDs []string `json:"product_ids"`
 }
 
+// RemediationData contains information about how to remediate a vulnerability for a set of products.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32312-vulnerabilities-property---remediations
+type RemediationData struct {
+	Category     string      `json:"category"`
+	Date         time.Time   `json:"date"`
+	Details      string      `json:"details"`
+	Entitlements []string    `json:"entitlements"`
+	GroupIDs     []string    `json:"group_ids"`
+	ProductIDs   []string    `json:"product_ids"`
+	Restart      RestartData `json:"restart_required"`
+}
+
+// Remediation instructions for restart of affected software.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#323127-vulnerabilities-property---remediations---restart-required
+type RestartData struct {
+	Category string `json:"category"`
+	Details  string `json:"details"`
+}
 
 // Machine readable flags for products related to the Vulnerability
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3235-vulnerabilities-property---flags
 type Flag struct {
-	Label string `json:"label"`
-	Date time.Time `json:"date"`
-	Groups []string `json:"group_ids"`
-	ProductIDs []string `json:"product_ids"`
+	Label      string    `json:"label"`
+	Date       time.Time `json:"date"`
+	GroupIDs   []string  `json:"group_ids"`
+	ProductIDs []string  `json:"product_ids"`
 }
 
 // ProductBranch is a recursive struct that contains information about a product and
