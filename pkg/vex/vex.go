@@ -169,12 +169,39 @@ func (vexDoc *VEX) ToJSON(w io.Writer) error {
 	return nil
 }
 
+// EffectiveStatement returns the latest VEX statement for a given product and
+// vulnerability, that is the statement that contains the latest data about
+// impact to a given product.
+func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
+	statements := vexDoc.Statements
+	var t time.Time
+	if vexDoc.Timestamp != nil {
+		t = *vexDoc.Timestamp
+	}
+
+	SortStatements(statements, t)
+
+	for i := len(statements) - 1; i >= 0; i-- {
+		if statements[i].Vulnerability != vulnID {
+			continue
+		}
+		for _, p := range statements[i].Products {
+			if p == product {
+				return &statements[i]
+			}
+		}
+	}
+	return nil
+}
+
 // StatementFromID returns a statement for a given vulnerability if there is one.
+//
+// Deprecated: vex.StatementFromID is deprecated and will be removed in an upcoming version
 func (vexDoc *VEX) StatementFromID(id string) *Statement {
-	for _, statement := range vexDoc.Statements { //nolint:gocritic // turning off for rule rangeValCopy
-		if statement.Vulnerability == id {
-			logrus.Infof("VEX doc contains statement for CVE %s", id)
-			return &statement
+	logrus.Warn("vex.StatementFromID is deprecated and will be removed in an upcoming version")
+	for i := range vexDoc.Statements {
+		if vexDoc.Statements[i].Vulnerability == id && len(vexDoc.Statements[i].Products) > 0 {
+			return vexDoc.EffectiveStatement(vexDoc.Statements[i].Products[0], id)
 		}
 	}
 	return nil

@@ -30,6 +30,94 @@ func TestLoadCSAF(t *testing.T) {
 	require.Equal(t, vexDoc.Metadata.ID, "2022-EVD-UC-01-NA-001")
 }
 
+func TestEffectiveStatement(t *testing.T) {
+	date1 := time.Date(2023, 4, 17, 20, 34, 58, 0, time.UTC)
+	date2 := time.Date(2023, 4, 18, 20, 34, 58, 0, time.UTC)
+	for _, tc := range []struct {
+		vexDoc         *VEX
+		vulnID         string
+		product        string
+		shouldNil      bool
+		expectedDate   *time.Time
+		expectedStatus Status
+	}{
+		{
+			// Single statement
+			vexDoc: &VEX{
+				Statements: []Statement{
+					{
+						Vulnerability: "CVE-2014-123456",
+						Timestamp:     &date1,
+						Products:      []string{"pkg://deb@1.0"},
+						Status:        StatusNotAffected,
+					},
+				},
+			},
+			vulnID:         "CVE-2014-123456",
+			product:        "pkg://deb@1.0",
+			shouldNil:      false,
+			expectedDate:   &date1,
+			expectedStatus: StatusNotAffected,
+		},
+		{
+			// Two consecutive statemente
+			vexDoc: &VEX{
+				Statements: []Statement{
+					{
+						Vulnerability: "CVE-2014-123456",
+						Timestamp:     &date1,
+						Products:      []string{"pkg://deb@1.0"},
+						Status:        StatusUnderInvestigation,
+					},
+					{
+						Vulnerability: "CVE-2014-123456",
+						Timestamp:     &date2,
+						Products:      []string{"pkg://deb@1.0"},
+						Status:        StatusNotAffected,
+					},
+				},
+			},
+			vulnID:         "CVE-2014-123456",
+			product:        "pkg://deb@1.0",
+			shouldNil:      false,
+			expectedDate:   &date2,
+			expectedStatus: StatusNotAffected,
+		},
+		{
+			// Different products
+			vexDoc: &VEX{
+				Statements: []Statement{
+					{
+						Vulnerability: "CVE-2014-123456",
+						Timestamp:     &date1,
+						Products:      []string{"pkg://deb@1.0"},
+						Status:        StatusUnderInvestigation,
+					},
+					{
+						Vulnerability: "CVE-2014-123456",
+						Timestamp:     &date2,
+						Products:      []string{"pkg://deb@2.0"},
+						Status:        StatusNotAffected,
+					},
+				},
+			},
+			vulnID:         "CVE-2014-123456",
+			product:        "pkg://deb@1.0",
+			shouldNil:      false,
+			expectedDate:   &date1,
+			expectedStatus: StatusUnderInvestigation,
+		},
+	} {
+		s := tc.vexDoc.EffectiveStatement(tc.product, tc.vulnID)
+		if tc.shouldNil {
+			require.Nil(t, s)
+		} else {
+			require.Equal(t, tc.expectedDate, s.Timestamp)
+			require.Equal(t, tc.expectedStatus, s.Status)
+		}
+	}
+}
+
 func genTestDoc(t *testing.T) VEX {
 	ts, err := time.Parse(time.RFC3339, "2022-12-22T16:36:43-05:00")
 	require.NoError(t, err)
