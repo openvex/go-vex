@@ -3,7 +3,7 @@ module github.com/openvex/go-vex
 go 1.19
 
 require (
-	github.com/in-toto/in-toto-golang v0.7.1
+	github.com/in-toto/in-toto-golang v0.8.0
 	github.com/owenrumney/go-sarif v1.1.1
 	github.com/sirupsen/logrus v1.9.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -25,5 +25,5 @@ require (
 require (
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/stretchr/testify v1.8.2
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
 )
