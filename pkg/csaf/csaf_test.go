@@ -21,7 +21,7 @@ func TestOpen(t *testing.T) {
 	// Vulnerabilities
 	require.Len(t, doc.Vulnerabilities, 1)
 	require.Equal(t, doc.Vulnerabilities[0].CVE, "CVE-2009-4487")
-	require.Len(t, doc.Vulnerabilities[0].ProductStatus, 1)
+	require.Len(t, doc.Vulnerabilities[0].ProductStatus, 2)
 	require.Len(t, doc.Vulnerabilities[0].ProductStatus["known_not_affected"], 1)
 	require.Equal(t, doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0], "CSAFPID-0001")
 }
@@ -52,8 +52,9 @@ func TestListProducts(t *testing.T) {
 	prods := doc.ProductTree.Branches[0].Branches[0].Branches[0].ListProducts()
 	require.Len(t, prods, 1)
 	require.Equal(t, prods[0].IdentificationHelper["purl"], "pkg:golang/github.com/go-homedir@v1.1.0")
+	require.Len(t, doc.ProductTree.Relationships, 1)
 
 	allProds := doc.ProductTree.Branches[0].ListProducts()
 	require.NotNil(t, allProds)
-	require.Len(t, allProds, 2)
+	require.Len(t, allProds, 3)
 }
