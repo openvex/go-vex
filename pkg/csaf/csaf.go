@@ -35,23 +35,9 @@ type DocumentMetadata struct {
 	// Aggregate severity is a vehicle that is provided by the document producer to convey the urgency and
 	// criticality with which the one or more vulnerabilities reported should be addressed.
 	//
-	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3212-document-property---aggregate-severity
-	AggregateSeverity Severity `json:"aggregate_severity"`
-	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3213-document-property---category
-	Category   string      `json:"category"`
-	Notes      []Note      `json:"notes"`
 	Title      string      `json:"title"`
 	Tracking   Tracking    `json:"tracking"`
 	References []Reference `json:"references"`
-}
-
-// Note with the mandatory properties category and text providing a place to put all manner of text blobs related to the current context.
-//
-// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#315-notes-type
-type Note struct {
-	Category string `json:"category"`
-	Text     string `json:"text"`
-	Title    string `json:"title,omitempty"`
 }
 
 // Document references holds a list of references associated with the whole document.
@@ -61,14 +47,6 @@ type Reference struct {
 	Category string `json:"category"`
 	Summary  string `json:"summary"`
 	URL      string `json:"url"`
-}
-
-// Severity with the mandatory property text and the optional property namespace is a vehicle that is provided by the document producer to convey the urgency and criticality with which the one or more vulnerabilities reported should be addressed.
-//
-// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3212-document-property---aggregate-severity
-type Severity struct {
-	Namespace string `json:"namespace,omitempty"`
-	Text      string `json:"text"`
 }
 
 // Tracking contains information used to track the CSAF document through its lifecycle.
@@ -88,11 +66,6 @@ type Vulnerability struct {
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3232-vulnerabilities-property---cve
 	CVE string `json:"cve"`
-
-	// The MITRE standard Common Weakness Enumeration (CWE) for the weakness associated.
-	//
-	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3233-vulnerabilities-property---cwe
-	CWE CWEInfo `json:"cwe"`
 
 	// List of IDs represents a list of unique labels or tracking IDs for the vulnerability (if such information exists).
 	//
