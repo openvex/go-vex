@@ -10,15 +10,9 @@ updates:
       # Run every weekday
       interval: "daily"
     open-pull-requests-limit: 10
-    labels:
-    - "kind/other"
-    - "release-note-none"
 
   - package-ecosystem: gomod
     directory: "/"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
-    labels:
-    - "kind/other"
-    - "release-note-none"
