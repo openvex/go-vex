@@ -23,6 +23,6 @@ require (
 
 require (
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/sys v0.8.0 // indirect
 )
