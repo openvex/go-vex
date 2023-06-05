@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/in-toto/in-toto-golang v0.9.0
 	github.com/owenrumney/go-sarif v1.1.1
-	github.com/sirupsen/logrus v1.9.2
+	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v3 v3.0.1
 )
 
