@@ -265,8 +265,8 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 	}
 
 	// Cycle the CSAF vulns list and get those that apply
-	for _, c := range csafDoc.Vulnerabilities {
-		for status, docProducts := range c.ProductStatus {
+	for i := range csafDoc.Vulnerabilities {
+		for status, docProducts := range csafDoc.Vulnerabilities[i].ProductStatus {
 			for _, productID := range docProducts {
 				if _, ok := productDict[productID]; ok {
 					// Check we have a valid status
@@ -276,7 +276,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 
 					// TODO search the threats struct for justification, etc
 					just := ""
-					for _, t := range c.Threats {
+					for _, t := range csafDoc.Vulnerabilities[i].Threats {
 						// Search the threats for a justification
 						for _, p := range t.ProductIDs {
 							if p == productID {
@@ -286,7 +286,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 					}
 
 					v.Statements = append(v.Statements, Statement{
-						Vulnerability:   c.CVE,
+						Vulnerability:   csafDoc.Vulnerabilities[i].CVE,
 						Status:          StatusFromCSAF(status),
 						Justification:   "", // Justifications are not machine readable in csaf, it seems
 						ActionStatement: just,

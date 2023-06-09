@@ -32,8 +32,21 @@ type CSAF struct {
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321-document-property
 type DocumentMetadata struct {
-	Title    string   `json:"title"`
-	Tracking Tracking `json:"tracking"`
+	// Aggregate severity is a vehicle that is provided by the document producer to convey the urgency and
+	// criticality with which the one or more vulnerabilities reported should be addressed.
+	//
+	Title      string      `json:"title"`
+	Tracking   Tracking    `json:"tracking"`
+	References []Reference `json:"references"`
+}
+
+// Document references holds a list of references associated with the whole document.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3219-document-property---references
+type Reference struct {
+	Category string `json:"category"`
+	Summary  string `json:"summary"`
+	URL      string `json:"url"`
 }
 
 // Tracking contains information used to track the CSAF document through its lifecycle.
@@ -42,6 +55,7 @@ type DocumentMetadata struct {
 type Tracking struct {
 	ID                 string    `json:"id"`
 	CurrentReleaseDate time.Time `json:"current_release_date"`
+	InitialReleaseDate time.Time `json:"initial_release_date"`
 }
 
 // Vulnerability contains information about a CVE and its associated threats.
@@ -52,6 +66,11 @@ type Vulnerability struct {
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3232-vulnerabilities-property---cve
 	CVE string `json:"cve"`
+
+	// List of IDs represents a list of unique labels or tracking IDs for the vulnerability (if such information exists).
+	//
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3236-vulnerabilities-property---ids
+	IDs []TrackingID `json:"ids"`
 
 	// Provide details on the status of the referenced product related to the vulnerability.
 	//
@@ -72,6 +91,21 @@ type Vulnerability struct {
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3235-vulnerabilities-property---flags
 	Flags []Flag `json:"flags"`
+
+	// Vulnerability references holds a list of references associated with this vulnerability item.
+	//
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32310-vulnerabilities-property---references
+	References []Reference `json:"references"`
+
+	ReleaseDate time.Time `json:"release_date"`
+}
+
+// Every ID item with the two mandatory properties System Name (system_name) and Text (text) contains a single unique label or tracking ID for the vulnerability.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3236-vulnerabilities-property---ids
+type TrackingID struct {
+	SystemName string `json:"system_name"`
+	Text       string `json:"text"`
 }
 
 // ThreatData contains information about a threat to a product.
@@ -185,6 +219,28 @@ func (branch *ProductBranch) FindFirstProduct() string {
 	// Recursively search for the first product	identifier
 	for _, b := range branch.Branches {
 		if p := b.FindFirstProduct(); p != "" {
+			return p
+		}
+	}
+
+	return ""
+}
+
+// FindFirstProductName recursively searches for the first product name in the tree
+// and returns it or an empty string if no product name is found.
+func (branch *ProductBranch) FindFirstProductName() string {
+	if branch.Product.Name != "" {
+		return branch.Product.Name
+	}
+
+	// No nested branches
+	if branch.Branches == nil {
+		return ""
+	}
+
+	// Recursively search for the first product	identifier
+	for _, b := range branch.Branches {
+		if p := b.FindFirstProductName(); p != "" {
 			return p
 		}
 	}

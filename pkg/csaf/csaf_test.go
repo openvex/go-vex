@@ -26,6 +26,16 @@ func TestOpen(t *testing.T) {
 	require.Equal(t, doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0], "CSAFPID-0001")
 }
 
+func TestOpenRHAdvisory(t *testing.T) {
+	doc, err := Open("testdata/rhsa-2020_1358.json")
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+	require.Equal(t, "Red Hat Security Advisory: virt:rhel security and bug fix update", doc.Document.Title)
+	require.Equal(t, "AppStream-8.1.0.Z.MAIN.EUS", doc.FirstProductName())
+
+	require.Equal(t, "https://bugzilla.redhat.com/show_bug.cgi?id=1794290", doc.Vulnerabilities[0].IDs[0].Text)
+}
+
 func TestFindFirstProduct(t *testing.T) {
 	doc, err := Open("testdata/csaf.json")
 	require.NoError(t, err)
