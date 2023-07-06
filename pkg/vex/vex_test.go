@@ -134,15 +134,28 @@ func genTestDoc(t *testing.T) VEX {
 			{
 				Vulnerability:   "CVE-1234-5678",
 				VulnDescription: "",
-				Products:        []string{"pkg:apk/wolfi/bash@1.0.0"},
-				Status:          "under_investigation",
+				Products: []Product{
+					{
+						Component: Component{
+							ID: "pkg:oci/example@sha256:47fed8868b46b060efb8699dc40e981a0c785650223e03602d8c4493fc75b68c",
+						},
+						Subcomponents: []Subcomponent{
+							{
+								Component: Component{
+									ID: "pkg:apk/wolfi/bash@1.0.0",
+								},
+							},
+						},
+					},
+				},
+				Status: "under_investigation",
 			},
 		},
 	}
 }
 
 func TestCanonicalHash(t *testing.T) {
-	goldenHash := `461bb1de8d85c7a6af96edf24d0e0672726d248500e63c5413f89db0c6710fa0`
+	goldenHash := `3397119e99cb71129dada8fbc96722eb59121839cf9018dc327e0215bc7843bf`
 
 	otherTS, err := time.Parse(time.RFC3339, "2019-01-22T16:36:43-05:00")
 	require.NoError(t, err)
@@ -159,17 +172,18 @@ func TestCanonicalHash(t *testing.T) {
 			func(v *VEX) {
 				v.Statements = append(v.Statements, Statement{
 					Vulnerability: "CVE-2010-543231",
-					Products:      []string{"pkg:apk/wolfi/git@2.0.0"},
-					Status:        "affected",
+					Products: []Product{
+						{Component: Component{ID: "pkg:apk/wolfi/git@2.0.0"}},
+					},
+					Status: "affected",
 				})
 			},
-			"cf392111c8dfee8f6a115780de1eabf292fcd36aafb6eca75952ea7e2d648e21",
+			"0ba39edb13118b7396c0d1ee13d0d38d4a3303381e22e86a1b2c9d723793a832",
 			false,
 		},
 		// Changing metadata should not change hash
 		{
 			func(v *VEX) {
-				v.Author = "123"
 				v.AuthorRole = "abc"
 				v.ID = "298347" // Mmhh...
 				v.Supplier = "Mr Supplier"
@@ -193,9 +207,9 @@ func TestCanonicalHash(t *testing.T) {
 		// Changing products changes the hash
 		{
 			func(v *VEX) {
-				v.Statements[0].Products[0] = "cool router, bro"
+				v.Statements[0].Products[0].ID = "cool router, bro"
 			},
-			"3ba778366d70b4fc656f9c1338a6be26fab55a7d011db4ceddf2f4840080ab3b",
+			"d042a7f2bbf3bd2c59b744cfe310ec11c920f99344eaa95fad115c323217ec33",
 			false,
 		},
 		// Changing document time changes the hash
@@ -203,7 +217,7 @@ func TestCanonicalHash(t *testing.T) {
 			func(v *VEX) {
 				v.Timestamp = &otherTS
 			},
-			"c69a58b923d83f2c0952a508572aec6529801950e9dcac520dfbcbb953fffe52",
+			"aba93636cf64a52949d82b7862f76dd9bd361097e1bbe6881fbac495b933c774",
 			false,
 		},
 		// Same timestamp in statement as doc should not change the hash
@@ -235,7 +249,7 @@ func TestGenerateCanonicalID(t *testing.T) {
 		{
 			// Normal generation
 			prepare:    func(v *VEX) {},
-			expectedID: "https://openvex.dev/docs/public/vex-461bb1de8d85c7a6af96edf24d0e0672726d248500e63c5413f89db0c6710fa0",
+			expectedID: "https://openvex.dev/docs/public/vex-3397119e99cb71129dada8fbc96722eb59121839cf9018dc327e0215bc7843bf",
 		},
 		{
 			// Existing IDs should not be changed

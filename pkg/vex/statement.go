@@ -30,11 +30,10 @@ type Statement struct {
 	// was known to be true.
 	Timestamp *time.Time `json:"timestamp,omitempty"`
 
-	// ProductIdentifiers
+	// Product
 	// Product details MUST specify what Status applies to.
 	// Product details MUST include [product_id] and MAY include [subcomponent_id].
-	Products      []string `json:"products,omitempty"`
-	Subcomponents []string `json:"subcomponents,omitempty"`
+	Products []Product `json:"products,omitempty"`
 
 	// A VEX statement MUST provide Status of the vulnerabilities with respect to the
 	// products and components listed in the statement. Status MUST be one of the

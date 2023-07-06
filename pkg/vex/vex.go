@@ -321,7 +321,13 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 						Status:          StatusFromCSAF(status),
 						Justification:   "", // Justifications are not machine readable in csaf, it seems
 						ActionStatement: just,
-						Products:        []string{productDict[productID]},
+						Products: []Product{
+							{
+								Component: Component{
+									ID: productID,
+								},
+							},
+						},
 					})
 				}
 			}
@@ -344,11 +350,14 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 	// 2. Document version
 	cString += fmt.Sprintf(":%s", vexDoc.Version)
 
-	// 3. Sort the statements
+	// 3. Author identity
+	cString += fmt.Sprintf(":%s", vexDoc.Author)
+
+	// 4. Sort the statements
 	stmts := vexDoc.Statements
 	SortStatements(stmts, *vexDoc.Timestamp)
 
-	// 4. Now add the data from each statement
+	// 5. Now add the data from each statement
 	//nolint:gocritic
 	for _, s := range stmts {
 		// 4a. Vulnerability
@@ -361,8 +370,17 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 		} else {
 			cString += fmt.Sprintf(":%d", vexDoc.Timestamp.Unix())
 		}
-		// 4d. Sorted products
-		prods := s.Products
+		// 4d. Sorted product strings
+		prods := []string{}
+		for _, p := range s.Products {
+			prodString := cstringFromComponent(p.Component)
+			if p.Subcomponents != nil && len(p.Subcomponents) > 0 {
+				for _, sc := range p.Subcomponents {
+					prodString += cstringFromComponent(sc.Component)
+				}
+			}
+			prods = append(prods, prodString)
+		}
 		sort.Strings(prods)
 		cString += fmt.Sprintf(":%s", strings.Join(prods, ":"))
 	}
@@ -373,6 +391,23 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 		return "", fmt.Errorf("hashing canonicalization string: %w", err)
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+// cstringFromComponent returns a string concatenating the data of a component
+// this internal function is meant to generate a predicatable string to generate
+// the document's CanonicalHash
+func cstringFromComponent(c Component) string {
+	s := fmt.Sprintf(":%s", c.ID)
+
+	for algo, val := range c.Hashes {
+		s += fmt.Sprintf(":%s@%s", algo, val)
+	}
+
+	for t, id := range c.Identifiers {
+		s += fmt.Sprintf(":%s@%s", t, id)
+	}
+
+	return s
 }
 
 // GenerateCanonicalID generates an ID for the document. The ID will be
