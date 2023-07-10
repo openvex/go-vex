@@ -186,11 +186,11 @@ func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
 	SortStatements(statements, t)
 
 	for i := len(statements) - 1; i >= 0; i-- {
-		if statements[i].Vulnerability != vulnID {
+		if statements[i].Vulnerability.ID != vulnID {
 			continue
 		}
 		for _, p := range statements[i].Products {
-			if p == product {
+			if p.ID == product {
 				return &statements[i]
 			}
 		}
@@ -204,8 +204,8 @@ func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
 func (vexDoc *VEX) StatementFromID(id string) *Statement {
 	logrus.Warn("vex.StatementFromID is deprecated and will be removed in an upcoming version")
 	for i := range vexDoc.Statements {
-		if vexDoc.Statements[i].Vulnerability == id && len(vexDoc.Statements[i].Products) > 0 {
-			return vexDoc.EffectiveStatement(vexDoc.Statements[i].Products[0], id)
+		if string(vexDoc.Statements[i].Vulnerability.Name) == id && len(vexDoc.Statements[i].Products) > 0 {
+			return vexDoc.EffectiveStatement(vexDoc.Statements[i].Products[0].ID, id)
 		}
 	}
 	return nil
@@ -317,7 +317,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 					}
 
 					v.Statements = append(v.Statements, Statement{
-						Vulnerability:   csafDoc.Vulnerabilities[i].CVE,
+						Vulnerability:   Vulnerability{Name: VulnerabilityID(csafDoc.Vulnerabilities[i].CVE)},
 						Status:          StatusFromCSAF(status),
 						Justification:   "", // Justifications are not machine readable in csaf, it seems
 						ActionStatement: just,

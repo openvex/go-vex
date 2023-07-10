@@ -23,8 +23,7 @@ type Statement struct {
 	//
 	// [vul_id] MAY be URIs or URLs.
 	// [vul_id] MAY be arbitrary and MAY be created by the VEX statement [author].
-	Vulnerability   string `json:"vulnerability,omitempty"`
-	VulnDescription string `json:"vuln_description,omitempty"`
+	Vulnerability Vulnerability `json:"vulnerability,omitempty"`
 
 	// Timestamp is the time at which the information expressed in the Statement
 	// was known to be true.
@@ -136,7 +135,8 @@ func (stmt Statement) Validate() error { //nolint:gocritic // turning off for ru
 // The documentTimestamp parameter is needed because statements without timestamps inherit the timestamp of the document.
 func SortStatements(stmts []Statement, documentTimestamp time.Time) {
 	sort.SliceStable(stmts, func(i, j int) bool {
-		vulnComparison := strings.Compare(stmts[i].Vulnerability, stmts[j].Vulnerability)
+		// TODO: Add methods for aliases
+		vulnComparison := strings.Compare(string(stmts[i].Vulnerability.Name), string(stmts[j].Vulnerability.Name))
 		if vulnComparison != 0 {
 			// i.e. different vulnerabilities; sort by string comparison
 			return vulnComparison < 0
