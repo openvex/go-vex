@@ -361,7 +361,7 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 	//nolint:gocritic
 	for _, s := range stmts {
 		// 4a. Vulnerability
-		cString += fmt.Sprintf(":%s", s.Vulnerability)
+		cString += cstringFromVulnerability(s.Vulnerability)
 		// 4b. Status + Justification
 		cString += fmt.Sprintf(":%s:%s", s.Status, s.Justification)
 		// 4c. Statement time, in unixtime. If it exists, if not the doc's
@@ -408,6 +408,20 @@ func cstringFromComponent(c Component) string {
 	}
 
 	return s
+}
+
+// cstringFromVulnerability returns a string concatenating the vulnerability
+// elements into a reproducible string that can be used to hash or index the
+// vulnerability data or the statement.
+func cstringFromVulnerability(v Vulnerability) string {
+	cString := fmt.Sprintf(":%s:%s", v.ID, v.Name)
+	list := []string{}
+	for i := range v.Aliases {
+		list = append(list, string(v.Aliases[i]))
+	}
+	sort.Strings(list)
+	cString += strings.Join(list, ":")
+	return cString
 }
 
 // GenerateCanonicalID generates an ID for the document. The ID will be
