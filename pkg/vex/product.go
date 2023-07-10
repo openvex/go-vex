@@ -15,9 +15,20 @@ package vex
 // must an IRI describe two different pieces of software or used to describe
 // a range of software.
 type Component struct {
-	ID          string                    `json:"@id,omitempty"`
-	Hashes      map[Algorithm]Hash        `json:"hashes,omitempty"`
+	// ID is an IRI identifying the component. It is optional as the component
+	// can also be identified using hashes or software identifiers.
+	ID string `json:"@id,omitempty"`
+
+	// Hashes is a map of hashes to identify the component using cryptographic
+	// hashes.
+	Hashes map[Algorithm]Hash `json:"hashes,omitempty"`
+
+	// Identifiers is a list of software identifiers that describe the component.
 	Identifiers map[IdentifierType]string `json:"identifiers,omitempty"`
+
+	// Supplier is an optional machine-readable identifier for the supplier of
+	// the component. Valid examples include email address or IRIs.
+	Supplier string `json:"supplier,omitempty"`
 }
 
 // Product abstracts the VEX product into a struct that can identify sofware

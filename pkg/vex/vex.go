@@ -34,7 +34,7 @@ const (
 	DefaultAuthor = "Unknown Author"
 
 	// DefaultRole is the default value for a document's AuthorRole field.
-	DefaultRole = "Document Creator"
+	DefaultRole = ""
 
 	// Context is the URL of the json-ld context definition
 	Context = "https://openvex.dev/ns"
@@ -74,15 +74,19 @@ type Metadata struct {
 	Author string `json:"author"`
 
 	// AuthorRole describes the role of the document Author.
-	AuthorRole string `json:"role"`
+	AuthorRole string `json:"role,omitempty"`
 
 	// Timestamp defines the time at which the document was issued.
 	Timestamp *time.Time `json:"timestamp"`
 
+	// LastUpdated marks the time when the document had its last update. When the
+	// document changes both version and this field should be updated.
+	LastUpdated *time.Time `json:"last_updated,omitempty"`
+
 	// Version is the document version. It must be incremented when any content
 	// within the VEX document changes, including any VEX statements included within
 	// the VEX document.
-	Version string `json:"version"`
+	Version int `json:"version"`
 
 	// Tooling expresses how the VEX document and contained VEX statements were
 	// generated. It's optional. It may specify tools or automated processes used in
@@ -108,7 +112,7 @@ func New() VEX {
 			Context:    Context,
 			Author:     DefaultAuthor,
 			AuthorRole: DefaultRole,
-			Version:    "1",
+			Version:    1,
 			Timestamp:  &now,
 		},
 		Statements: []Statement{},
@@ -348,7 +352,7 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 	cString := fmt.Sprintf("%d", vexDoc.Timestamp.Unix())
 
 	// 2. Document version
-	cString += fmt.Sprintf(":%s", vexDoc.Version)
+	cString += fmt.Sprintf(":%d", vexDoc.Version)
 
 	// 3. Author identity
 	cString += fmt.Sprintf(":%s", vexDoc.Author)

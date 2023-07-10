@@ -124,7 +124,7 @@ func genTestDoc(t *testing.T) VEX {
 			Author:     "John Doe",
 			AuthorRole: "VEX Writer Extraordinaire",
 			Timestamp:  &ts,
-			Version:    "1",
+			Version:    1,
 			Tooling:    "OpenVEX",
 			Supplier:   "Chainguard Inc",
 		},

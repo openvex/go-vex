@@ -16,6 +16,10 @@ import (
 // [vul_id] for one or more [product_id]s. A VEX Statement exists within a VEX
 // Document.
 type Statement struct {
+	// ID is an optional identifier for the statement. It takes an IRI and must
+	// be unique for each statement in the document.
+	ID string `json:"@id,omitempty"`
+
 	// [vul_id] SHOULD use existing and well known identifiers, for example:
 	// CVE, the Global Security Database (GSD), or a supplier’s vulnerability
 	// tracking system. It is expected that vulnerability identification systems
@@ -28,6 +32,9 @@ type Statement struct {
 	// Timestamp is the time at which the information expressed in the Statement
 	// was known to be true.
 	Timestamp *time.Time `json:"timestamp,omitempty"`
+
+	// LastUpdated records the time when the statement last had a modification
+	LastUpdated *time.Time `json:"last_updated,omitempty"`
 
 	// Product
 	// Product details MUST specify what Status applies to.
