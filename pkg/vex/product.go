@@ -48,8 +48,34 @@ type Subcomponent struct {
 	Component
 }
 
+type IdentifierType string
+
+const (
+	PURL  IdentifierType = "purl"
+	CPE22 IdentifierType = "cpe22"
+	CPE23 IdentifierType = "cpe23"
+)
+
+type IdentifierLocator string
+
 type Algorithm string
 type Hash string
 
-type IdentifierType string
-type IdentifierLocator string
+// The following list of algorithms follows and expands the IANA list at:
+// https://www.iana.org/assignments/named-information/named-information.xhtml
+// It expands it, trying to keep the naming pattern.
+const (
+	MD5        Algorithm = "md5"
+	SHA1       Algorithm = "sha1"
+	SHA256     Algorithm = "sha-256"
+	SHA384     Algorithm = "sha-384"
+	SHA512     Algorithm = "sha-512"
+	SHA3224    Algorithm = "sha3-224"
+	SHA3256    Algorithm = "sha3-256"
+	SHA3384    Algorithm = "sha3-384"
+	SHA3512    Algorithm = "sha3-512"
+	BLAKE2S256 Algorithm = "blake2s-256"
+	BLAKE2B256 Algorithm = "blake2b-256"
+	BLAKE2B512 Algorithm = "blake2b-512"
+	BLAKE3     Algorithm = "blake3"
+)
