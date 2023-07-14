@@ -30,6 +30,10 @@ const (
 	// [in-toto statements]: https://github.com/in-toto/attestation/blob/main/spec/README.md#statement
 	TypeURI = "https://openvex.dev/ns"
 
+	// SpecVersion is the latest released version of the openvex. This constant
+	// is used to form the context URL when generating new documents.
+	SpecVersion = "0.2.0"
+
 	// DefaultAuthor is the default value for a document's Author field.
 	DefaultAuthor = "Unknown Author"
 
@@ -109,7 +113,7 @@ func New() VEX {
 	}
 	return VEX{
 		Metadata: Metadata{
-			Context:    Context,
+			Context:    fmt.Sprintf("%s/%s", Context, SpecVersion),
 			Author:     DefaultAuthor,
 			AuthorRole: DefaultRole,
 			Version:    1,

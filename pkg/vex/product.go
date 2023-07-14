@@ -31,7 +31,7 @@ type Component struct {
 	Supplier string `json:"supplier,omitempty"`
 }
 
-// Product abstracts the VEX product into a struct that can identify sofware
+// Product abstracts the VEX product into a struct that can identify software
 // through various means. The main one is the ID field which contains an IRI
 // identifying the product, possibly pointing to another document with more data,
 // like an SBOM. The Product struct also supports naming software using its
@@ -48,7 +48,10 @@ type Subcomponent struct {
 	Component
 }
 
-type IdentifierType string
+type (
+	IdentifierLocator string
+	IdentifierType    string
+)
 
 const (
 	PURL  IdentifierType = "purl"
@@ -56,10 +59,10 @@ const (
 	CPE23 IdentifierType = "cpe23"
 )
 
-type IdentifierLocator string
-
-type Algorithm string
-type Hash string
+type (
+	Algorithm string
+	Hash      string
+)
 
 // The following list of algorithms follows and expands the IANA list at:
 // https://www.iana.org/assignments/named-information/named-information.xhtml
