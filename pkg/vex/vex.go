@@ -48,6 +48,10 @@ const (
 	errMsgParse = "error"
 )
 
+// DefaultNamespace is the URL that will be used to generate new IRIs for generated
+// documents and nodes. It is set to the OpenVEX public namespace by default.
+var DefaultNamespace = PublicNamespace
+
 // The VEX type represents a VEX document and all of its contained information.
 type VEX struct {
 	Metadata
@@ -386,7 +390,7 @@ func (vexDoc *VEX) GenerateCanonicalID() (string, error) {
 	}
 
 	// For common namespaced documents we namespace them into /public
-	vexDoc.ID = fmt.Sprintf("%s/public/vex-%s", PublicNamespace, cHash)
+	vexDoc.ID = fmt.Sprintf("%s/public/vex-%s", DefaultNamespace, cHash)
 	return vexDoc.ID, nil
 }
 
