@@ -278,3 +278,23 @@ func TestOpenCSAF(t *testing.T) {
 		require.Len(t, doc.Statements, tc.len)
 	}
 }
+
+func TestOpen(t *testing.T) {
+	for m, tc := range map[string]struct {
+		path      string
+		shouldErr bool
+	}{
+		"OpenVEX v0.0.1":              {"testdata/v0.0.1.json", false},
+		"OpenVEX v0.0.1 (no version)": {"testdata/v0.0.1-noversion.json", false},
+		"CSAF document":               {"testdata/csaf.json", false},
+	} {
+		doc, err := Open(tc.path)
+		if tc.shouldErr {
+			require.Error(t, err, m)
+			continue
+		}
+
+		require.NoError(t, err, m)
+		require.NotNil(t, doc, m)
+	}
+}
