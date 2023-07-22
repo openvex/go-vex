@@ -9,9 +9,11 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -55,6 +57,11 @@ const (
 // DefaultNamespace is the URL that will be used to generate new IRIs for generated
 // documents and nodes. It is set to the OpenVEX public namespace by default.
 var DefaultNamespace = PublicNamespace
+
+var (
+	contextRegExpPattern = fmt.Sprintf(`"@context":\s+"(%s\S*)"`, Context)
+	contextRegExp        *regexp.Regexp
+)
 
 // The VEX type represents a VEX document and all of its contained information.
 type VEX struct {
@@ -237,12 +244,50 @@ func SortDocuments(docs []*VEX) []*VEX {
 
 // Open tries to autodetect the vex format and open it
 func Open(path string) (*VEX, error) {
+	logrus.Info("Abriendo")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
 	}
 
+	if bytes.Contains(data, []byte(Context+"/"+SpecVersion)) {
+		logrus.Info("opening current vex")
+		return Parse(data)
+	} else if bytes.Contains(data, []byte(Context)) {
+		logrus.Info("Opening older openvex")
+		if contextRegExp == nil {
+			contextRegExp = regexp.MustCompile(contextRegExpPattern)
+		}
+
+		res := contextRegExp.FindSubmatch(data)
+		if len(res) == 0 {
+			return nil, fmt.Errorf("unable to parse OpenVEX version in document context")
+		}
+
+		version := strings.TrimPrefix(string(res[1]), Context)
+		version = strings.TrimPrefix(version, "/")
+
+		// If version is nil, then we assume v0.0.1
+		if version == "" {
+			version = "v0.0.1"
+		}
+
+		parser := getLegacyVersionParser(version)
+		if parser == nil {
+			return nil, fmt.Errorf("unable to get parser for version %s", version)
+		}
+
+		doc, err := parser(data)
+		if err != nil {
+			return nil, fmt.Errorf("parsing document: %w", err)
+		}
+
+		return doc, nil
+	}
+
 	if bytes.Contains(data, []byte(`"csaf_version"`)) {
+		logrus.Info("Abriendo CSAF")
+
 		doc, err := OpenCSAF(path, []string{})
 		if err != nil {
 			return nil, fmt.Errorf("attempting to open csaf doc: %w", err)
@@ -250,11 +295,7 @@ func Open(path string) (*VEX, error) {
 		return doc, nil
 	}
 
-	doc, err := Parse(data)
-	if err != nil {
-		return nil, err
-	}
-	return doc, nil
+	return nil, errors.New("unable to detect document format")
 }
 
 // OpenCSAF opens a CSAF document and builds a VEX object from it.
