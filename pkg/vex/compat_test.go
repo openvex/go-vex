@@ -29,7 +29,7 @@ func TestParse001(t *testing.T) {
 			false,
 			&VEX{
 				Metadata: Metadata{
-					Context:    "https://openvex.dev/ns/" + SpecVersion,
+					Context:    "https://openvex.dev/ns/v" + SpecVersion,
 					ID:         "https://openvex.dev/docs/example/vex-9fb3463de1b57",
 					Author:     "Wolfi J Inkinson",
 					AuthorRole: "Document Creator",

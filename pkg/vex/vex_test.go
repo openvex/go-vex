@@ -7,6 +7,8 @@ package vex
 
 import (
 	"fmt"
+	"os"
+	"sort"
 	"testing"
 	"time"
 
@@ -286,6 +288,7 @@ func TestOpen(t *testing.T) {
 	}{
 		"OpenVEX v0.0.1":              {"testdata/v0.0.1.json", false},
 		"OpenVEX v0.0.1 (no version)": {"testdata/v0.0.1-noversion.json", false},
+		"OpenVEX v0.2.0":              {"testdata/v0.2.0.json", false},
 		"CSAF document":               {"testdata/csaf.json", false},
 	} {
 		doc, err := Open(tc.path)
@@ -296,5 +299,42 @@ func TestOpen(t *testing.T) {
 
 		require.NoError(t, err, m)
 		require.NotNil(t, doc, m)
+	}
+}
+
+func TestParse(t *testing.T) {
+	for m, tc := range map[string]struct {
+		path      string
+		product   string
+		vulns     []string
+		shouldErr bool
+	}{
+		// Previous versions fail on test
+		"OpenVEX v0.0.1": {"testdata/v0.0.1.json", "", []string{}, true},
+		// Current version
+		"OpenVEX v0.2.0": {"testdata/v0.2.0.json", "pkg:oci/alpine@sha256%3A124c7d2707904eea7431fffe91522a01e5a861a624ee31d03372cc1d138a3126", []string{"CVE-2023-1255", "CVE-2023-2650", "CVE-2023-2975", "CVE-2023-3446", "CVE-2023-3817"}, false},
+	} {
+		data, err := os.ReadFile(tc.path)
+		require.NoError(t, err)
+
+		doc, err := Parse(data)
+		if tc.shouldErr {
+			require.Error(t, err, m)
+			continue
+		}
+
+		require.NoError(t, err, fmt.Errorf("%s: reading %s", m, tc.path))
+		require.NotNil(t, doc, m)
+
+		require.Equal(t, doc.Context, ContextLocator())
+		require.Len(t, doc.Statements, 5)
+
+		vulns := []string{}
+		for _, s := range doc.Statements {
+			vulns = append(vulns, string(s.Vulnerability.Name))
+			require.Equal(t, tc.product, s.Products[0].ID)
+		}
+		sort.Strings(vulns)
+		require.Equal(t, vulns, tc.vulns, m)
 	}
 }

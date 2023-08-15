@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -120,7 +119,7 @@ func New() VEX {
 	}
 	return VEX{
 		Metadata: Metadata{
-			Context:    fmt.Sprintf("%s/%s", Context, SpecVersion),
+			Context:    ContextLocator(),
 			Author:     DefaultAuthor,
 			AuthorRole: DefaultRole,
 			Version:    1,
@@ -142,6 +141,7 @@ func Load(path string) (*VEX, error) {
 	return Parse(data)
 }
 
+// Parse parses an OpenVEX document in the latest version from the data byte array.
 func Parse(data []byte) (*VEX, error) {
 	vexDoc := &VEX{}
 	if err := json.Unmarshal(data, vexDoc); err != nil {
@@ -163,7 +163,7 @@ func OpenYAML(path string) (*VEX, error) {
 	return &vexDoc, nil
 }
 
-// OpenJSON opens a VEX file in JSON format.
+// OpenJSON opens an OpenVEX file in JSON format.
 func OpenJSON(path string) (*VEX, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -244,13 +244,12 @@ func SortDocuments(docs []*VEX) []*VEX {
 
 // Open tries to autodetect the vex format and open it
 func Open(path string) (*VEX, error) {
-	logrus.Info("Abriendo")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
 	}
 
-	if bytes.Contains(data, []byte(Context+"/"+SpecVersion)) {
+	if bytes.Contains(data, []byte(ContextLocator())) {
 		logrus.Info("opening current vex")
 		return Parse(data)
 	} else if bytes.Contains(data, []byte(Context)) {
@@ -295,7 +294,7 @@ func Open(path string) (*VEX, error) {
 		return doc, nil
 	}
 
-	return nil, errors.New("unable to detect document format")
+	return nil, fmt.Errorf("unable to detect document format reading %s", path)
 }
 
 // OpenCSAF opens a CSAF document and builds a VEX object from it.
@@ -513,4 +512,9 @@ func DateFromEnv() (*time.Time, error) {
 		}
 	}
 	return &t, nil
+}
+
+// ContextLocator returns the locator string for the current OpenVEX version.
+func ContextLocator() string {
+	return fmt.Sprintf("%s/v%s", Context, SpecVersion)
 }
