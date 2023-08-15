@@ -6,8 +6,8 @@ SPDX-License-Identifier: Apache-2.0
 package vex
 
 // Component abstracts the common construct shared by product and subcomponents
-// allowing OpenVEX statements to point to a piece of software by identifier,
-// hash or identifier.
+// allowing OpenVEX statements to point to a piece of software by referencing it
+// by hash or identifier.
 //
 // The ID should be an IRI uniquely identifying the product. Software can be
 // referenced as a VEX product or subcomponent using only its IRI or it may be

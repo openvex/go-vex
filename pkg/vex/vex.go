@@ -409,17 +409,17 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 	// 5. Now add the data from each statement
 	//nolint:gocritic
 	for _, s := range stmts {
-		// 4a. Vulnerability
+		// 5a. Vulnerability
 		cString += cstringFromVulnerability(s.Vulnerability)
-		// 4b. Status + Justification
+		// 5b. Status + Justification
 		cString += fmt.Sprintf(":%s:%s", s.Status, s.Justification)
-		// 4c. Statement time, in unixtime. If it exists, if not the doc's
+		// 5c. Statement time, in unixtime. If it exists, if not the doc's
 		if s.Timestamp != nil {
 			cString += fmt.Sprintf(":%d", s.Timestamp.Unix())
 		} else {
 			cString += fmt.Sprintf(":%d", vexDoc.Timestamp.Unix())
 		}
-		// 4d. Sorted product strings
+		// 5d. Sorted product strings
 		prods := []string{}
 		for _, p := range s.Products {
 			prodString := cstringFromComponent(p.Component)
@@ -434,7 +434,7 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 		cString += fmt.Sprintf(":%s", strings.Join(prods, ":"))
 	}
 
-	// 5. Hash the string in sha256 and return
+	// 6. Hash the string in sha256 and return
 	h := sha256.New()
 	if _, err := h.Write([]byte(cString)); err != nil {
 		return "", fmt.Errorf("hashing canonicalization string: %w", err)
