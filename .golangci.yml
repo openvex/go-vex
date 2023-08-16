@@ -21,7 +21,6 @@ linters:
   enable:
     - asciicheck
     - bodyclose
-    - depguard
     - dogsled
     - dupl
     - durationcheck
@@ -58,6 +57,7 @@ linters:
     - unused
     - whitespace
     # - cyclop
+    # - depguard
     # - errorlint
     # - exhaustive
     # - exhaustivestruct

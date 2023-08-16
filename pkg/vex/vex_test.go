@@ -7,6 +7,8 @@ package vex
 
 import (
 	"fmt"
+	"os"
+	"sort"
 	"testing"
 	"time"
 
@@ -25,7 +27,7 @@ func TestLoadCSAF(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, vexDoc.Statements, 1)
 	require.Len(t, vexDoc.Statements[0].Products, 1)
-	require.Equal(t, vexDoc.Statements[0].Vulnerability, "CVE-2009-4487")
+	require.Equal(t, "CVE-2009-4487", string(vexDoc.Statements[0].Vulnerability.Name))
 	require.Equal(t, vexDoc.Statements[0].Status, StatusNotAffected)
 	require.Equal(t, vexDoc.Metadata.ID, "2022-EVD-UC-01-NA-001")
 }
@@ -33,7 +35,7 @@ func TestLoadCSAF(t *testing.T) {
 func TestEffectiveStatement(t *testing.T) {
 	date1 := time.Date(2023, 4, 17, 20, 34, 58, 0, time.UTC)
 	date2 := time.Date(2023, 4, 18, 20, 34, 58, 0, time.UTC)
-	for _, tc := range []struct {
+	for caseName, tc := range map[string]struct {
 		vexDoc         *VEX
 		vulnID         string
 		product        string
@@ -41,68 +43,65 @@ func TestEffectiveStatement(t *testing.T) {
 		expectedDate   *time.Time
 		expectedStatus Status
 	}{
-		{
-			// Single statement
+		"Single statement": {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: "CVE-2014-123456",
+						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
 						Timestamp:     &date1,
-						Products:      []string{"pkg://deb@1.0"},
+						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusNotAffected,
 					},
 				},
 			},
 			vulnID:         "CVE-2014-123456",
-			product:        "pkg://deb@1.0",
+			product:        "pkg:deb/pkg@1.0",
 			shouldNil:      false,
 			expectedDate:   &date1,
 			expectedStatus: StatusNotAffected,
 		},
-		{
-			// Two consecutive statemente
+		"Two consecutive statemente": {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: "CVE-2014-123456",
+						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
 						Timestamp:     &date1,
-						Products:      []string{"pkg://deb@1.0"},
+						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusUnderInvestigation,
 					},
 					{
-						Vulnerability: "CVE-2014-123456",
+						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
 						Timestamp:     &date2,
-						Products:      []string{"pkg://deb@1.0"},
+						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusNotAffected,
 					},
 				},
 			},
 			vulnID:         "CVE-2014-123456",
-			product:        "pkg://deb@1.0",
+			product:        "pkg:deb/pkg@1.0",
 			shouldNil:      false,
 			expectedDate:   &date2,
 			expectedStatus: StatusNotAffected,
 		},
-		{
-			// Different products
+		"Different products": {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: "CVE-2014-123456",
+						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
 						Timestamp:     &date1,
-						Products:      []string{"pkg://deb@1.0"},
+						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusUnderInvestigation,
 					},
 					{
-						Vulnerability: "CVE-2014-123456",
+						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
 						Timestamp:     &date2,
-						Products:      []string{"pkg://deb@2.0"},
+						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@2.0"}}},
 						Status:        StatusNotAffected,
 					},
 				},
 			},
 			vulnID:         "CVE-2014-123456",
-			product:        "pkg://deb@1.0",
+			product:        "pkg:deb/pkg@1.0",
 			shouldNil:      false,
 			expectedDate:   &date1,
 			expectedStatus: StatusUnderInvestigation,
@@ -112,6 +111,7 @@ func TestEffectiveStatement(t *testing.T) {
 		if tc.shouldNil {
 			require.Nil(t, s)
 		} else {
+			require.NotNil(t, s, caseName)
 			require.Equal(t, tc.expectedDate, s.Timestamp)
 			require.Equal(t, tc.expectedStatus, s.Status)
 		}
@@ -126,23 +126,37 @@ func genTestDoc(t *testing.T) VEX {
 			Author:     "John Doe",
 			AuthorRole: "VEX Writer Extraordinaire",
 			Timestamp:  &ts,
-			Version:    "1",
+			Version:    1,
 			Tooling:    "OpenVEX",
 			Supplier:   "Chainguard Inc",
 		},
 		Statements: []Statement{
 			{
-				Vulnerability:   "CVE-1234-5678",
-				VulnDescription: "",
-				Products:        []string{"pkg:apk/wolfi/bash@1.0.0"},
-				Status:          "under_investigation",
+				Vulnerability: Vulnerability{
+					Name: "CVE-1234-5678",
+				},
+				Products: []Product{
+					{
+						Component: Component{
+							ID: "pkg:oci/example@sha256:47fed8868b46b060efb8699dc40e981a0c785650223e03602d8c4493fc75b68c",
+						},
+						Subcomponents: []Subcomponent{
+							{
+								Component: Component{
+									ID: "pkg:apk/wolfi/bash@1.0.0",
+								},
+							},
+						},
+					},
+				},
+				Status: "under_investigation",
 			},
 		},
 	}
 }
 
 func TestCanonicalHash(t *testing.T) {
-	goldenHash := `461bb1de8d85c7a6af96edf24d0e0672726d248500e63c5413f89db0c6710fa0`
+	goldenHash := `a85519b483f5740f787986d9a72aa4990e79636c7c526d5e2bd7114dc05269d2`
 
 	otherTS, err := time.Parse(time.RFC3339, "2019-01-22T16:36:43-05:00")
 	require.NoError(t, err)
@@ -158,18 +172,19 @@ func TestCanonicalHash(t *testing.T) {
 		{
 			func(v *VEX) {
 				v.Statements = append(v.Statements, Statement{
-					Vulnerability: "CVE-2010-543231",
-					Products:      []string{"pkg:apk/wolfi/git@2.0.0"},
-					Status:        "affected",
+					Vulnerability: Vulnerability{Name: "CVE-2010-543231"},
+					Products: []Product{
+						{Component: Component{ID: "pkg:apk/wolfi/git@2.0.0"}},
+					},
+					Status: "affected",
 				})
 			},
-			"cf392111c8dfee8f6a115780de1eabf292fcd36aafb6eca75952ea7e2d648e21",
+			"d5e5fc62190aaf6128139ac45d24a73dbcf6564a3404621c6b5c9e440f072c86",
 			false,
 		},
 		// Changing metadata should not change hash
 		{
 			func(v *VEX) {
-				v.Author = "123"
 				v.AuthorRole = "abc"
 				v.ID = "298347" // Mmhh...
 				v.Supplier = "Mr Supplier"
@@ -182,7 +197,6 @@ func TestCanonicalHash(t *testing.T) {
 		{
 			func(v *VEX) {
 				v.Statements[0].ActionStatement = "Action!"
-				v.Statements[0].VulnDescription = "It is very bad"
 				v.Statements[0].StatusNotes = "Let's note somthn here"
 				v.Statements[0].ImpactStatement = "We evaded this CVE by a hair"
 				v.Statements[0].ActionStatementTimestamp = &otherTS
@@ -193,9 +207,9 @@ func TestCanonicalHash(t *testing.T) {
 		// Changing products changes the hash
 		{
 			func(v *VEX) {
-				v.Statements[0].Products[0] = "cool router, bro"
+				v.Statements[0].Products[0].ID = "cool router, bro"
 			},
-			"3ba778366d70b4fc656f9c1338a6be26fab55a7d011db4ceddf2f4840080ab3b",
+			"b875594ad77fed770931b15854c861a8d098fc15a36aec13526ec0abb4d2ace3",
 			false,
 		},
 		// Changing document time changes the hash
@@ -203,7 +217,7 @@ func TestCanonicalHash(t *testing.T) {
 			func(v *VEX) {
 				v.Timestamp = &otherTS
 			},
-			"c69a58b923d83f2c0952a508572aec6529801950e9dcac520dfbcbb953fffe52",
+			"9d7c3f6a441332f7f04d78a7d311174a0622209204228aa31dd4d5dffb6bb884",
 			false,
 		},
 		// Same timestamp in statement as doc should not change the hash
@@ -235,7 +249,7 @@ func TestGenerateCanonicalID(t *testing.T) {
 		{
 			// Normal generation
 			prepare:    func(v *VEX) {},
-			expectedID: "https://openvex.dev/docs/public/vex-461bb1de8d85c7a6af96edf24d0e0672726d248500e63c5413f89db0c6710fa0",
+			expectedID: "https://openvex.dev/docs/public/vex-a85519b483f5740f787986d9a72aa4990e79636c7c526d5e2bd7114dc05269d2",
 		},
 		{
 			// Existing IDs should not be changed
@@ -264,5 +278,63 @@ func TestOpenCSAF(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, doc)
 		require.Len(t, doc.Statements, tc.len)
+	}
+}
+
+func TestOpen(t *testing.T) {
+	for m, tc := range map[string]struct {
+		path      string
+		shouldErr bool
+	}{
+		"OpenVEX v0.0.1":              {"testdata/v0.0.1.json", false},
+		"OpenVEX v0.0.1 (no version)": {"testdata/v0.0.1-noversion.json", false},
+		"OpenVEX v0.2.0":              {"testdata/v0.2.0.json", false},
+		"CSAF document":               {"testdata/csaf.json", false},
+	} {
+		doc, err := Open(tc.path)
+		if tc.shouldErr {
+			require.Error(t, err, m)
+			continue
+		}
+
+		require.NoError(t, err, m)
+		require.NotNil(t, doc, m)
+	}
+}
+
+func TestParse(t *testing.T) {
+	for m, tc := range map[string]struct {
+		path      string
+		product   string
+		vulns     []string
+		shouldErr bool
+	}{
+		// Previous versions fail on test
+		"OpenVEX v0.0.1": {"testdata/v0.0.1.json", "", []string{}, true},
+		// Current version
+		"OpenVEX v0.2.0": {"testdata/v0.2.0.json", "pkg:oci/alpine@sha256%3A124c7d2707904eea7431fffe91522a01e5a861a624ee31d03372cc1d138a3126", []string{"CVE-2023-1255", "CVE-2023-2650", "CVE-2023-2975", "CVE-2023-3446", "CVE-2023-3817"}, false},
+	} {
+		data, err := os.ReadFile(tc.path)
+		require.NoError(t, err)
+
+		doc, err := Parse(data)
+		if tc.shouldErr {
+			require.Error(t, err, m)
+			continue
+		}
+
+		require.NoError(t, err, fmt.Errorf("%s: reading %s", m, tc.path))
+		require.NotNil(t, doc, m)
+
+		require.Equal(t, doc.Context, ContextLocator())
+		require.Len(t, doc.Statements, 5)
+
+		vulns := []string{}
+		for _, s := range doc.Statements {
+			vulns = append(vulns, string(s.Vulnerability.Name))
+			require.Equal(t, tc.product, s.Products[0].ID)
+		}
+		sort.Strings(vulns)
+		require.Equal(t, vulns, tc.vulns, m)
 	}
 }

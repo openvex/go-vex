@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,11 +31,15 @@ const (
 	// [in-toto statements]: https://github.com/in-toto/attestation/blob/main/spec/README.md#statement
 	TypeURI = "https://openvex.dev/ns"
 
+	// SpecVersion is the latest released version of the openvex. This constant
+	// is used to form the context URL when generating new documents.
+	SpecVersion = "0.2.0"
+
 	// DefaultAuthor is the default value for a document's Author field.
 	DefaultAuthor = "Unknown Author"
 
 	// DefaultRole is the default value for a document's AuthorRole field.
-	DefaultRole = "Document Creator"
+	DefaultRole = ""
 
 	// Context is the URL of the json-ld context definition
 	Context = "https://openvex.dev/ns"
@@ -51,6 +56,11 @@ const (
 // DefaultNamespace is the URL that will be used to generate new IRIs for generated
 // documents and nodes. It is set to the OpenVEX public namespace by default.
 var DefaultNamespace = PublicNamespace
+
+var (
+	contextRegExpPattern = fmt.Sprintf(`"@context":\s+"(%s\S*)"`, Context)
+	contextRegExp        *regexp.Regexp
+)
 
 // The VEX type represents a VEX document and all of its contained information.
 type VEX struct {
@@ -74,15 +84,19 @@ type Metadata struct {
 	Author string `json:"author"`
 
 	// AuthorRole describes the role of the document Author.
-	AuthorRole string `json:"role"`
+	AuthorRole string `json:"role,omitempty"`
 
 	// Timestamp defines the time at which the document was issued.
 	Timestamp *time.Time `json:"timestamp"`
 
+	// LastUpdated marks the time when the document had its last update. When the
+	// document changes both version and this field should be updated.
+	LastUpdated *time.Time `json:"last_updated,omitempty"`
+
 	// Version is the document version. It must be incremented when any content
 	// within the VEX document changes, including any VEX statements included within
 	// the VEX document.
-	Version string `json:"version"`
+	Version int `json:"version"`
 
 	// Tooling expresses how the VEX document and contained VEX statements were
 	// generated. It's optional. It may specify tools or automated processes used in
@@ -105,10 +119,10 @@ func New() VEX {
 	}
 	return VEX{
 		Metadata: Metadata{
-			Context:    Context,
+			Context:    ContextLocator(),
 			Author:     DefaultAuthor,
 			AuthorRole: DefaultRole,
-			Version:    "1",
+			Version:    1,
 			Timestamp:  &now,
 		},
 		Statements: []Statement{},
@@ -127,6 +141,7 @@ func Load(path string) (*VEX, error) {
 	return Parse(data)
 }
 
+// Parse parses an OpenVEX document in the latest version from the data byte array.
 func Parse(data []byte) (*VEX, error) {
 	vexDoc := &VEX{}
 	if err := json.Unmarshal(data, vexDoc); err != nil {
@@ -148,7 +163,7 @@ func OpenYAML(path string) (*VEX, error) {
 	return &vexDoc, nil
 }
 
-// OpenJSON opens a VEX file in JSON format.
+// OpenJSON opens an OpenVEX file in JSON format.
 func OpenJSON(path string) (*VEX, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -186,11 +201,11 @@ func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
 	SortStatements(statements, t)
 
 	for i := len(statements) - 1; i >= 0; i-- {
-		if statements[i].Vulnerability != vulnID {
+		if statements[i].Vulnerability.ID != vulnID {
 			continue
 		}
 		for _, p := range statements[i].Products {
-			if p == product {
+			if p.ID == product {
 				return &statements[i]
 			}
 		}
@@ -204,8 +219,8 @@ func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
 func (vexDoc *VEX) StatementFromID(id string) *Statement {
 	logrus.Warn("vex.StatementFromID is deprecated and will be removed in an upcoming version")
 	for i := range vexDoc.Statements {
-		if vexDoc.Statements[i].Vulnerability == id && len(vexDoc.Statements[i].Products) > 0 {
-			return vexDoc.EffectiveStatement(vexDoc.Statements[i].Products[0], id)
+		if string(vexDoc.Statements[i].Vulnerability.Name) == id && len(vexDoc.Statements[i].Products) > 0 {
+			return vexDoc.EffectiveStatement(vexDoc.Statements[i].Products[0].ID, id)
 		}
 	}
 	return nil
@@ -234,7 +249,44 @@ func Open(path string) (*VEX, error) {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
 	}
 
+	if bytes.Contains(data, []byte(ContextLocator())) {
+		logrus.Info("opening current vex")
+		return Parse(data)
+	} else if bytes.Contains(data, []byte(Context)) {
+		logrus.Info("Opening older openvex")
+		if contextRegExp == nil {
+			contextRegExp = regexp.MustCompile(contextRegExpPattern)
+		}
+
+		res := contextRegExp.FindSubmatch(data)
+		if len(res) == 0 {
+			return nil, fmt.Errorf("unable to parse OpenVEX version in document context")
+		}
+
+		version := strings.TrimPrefix(string(res[1]), Context)
+		version = strings.TrimPrefix(version, "/")
+
+		// If version is nil, then we assume v0.0.1
+		if version == "" {
+			version = "v0.0.1"
+		}
+
+		parser := getLegacyVersionParser(version)
+		if parser == nil {
+			return nil, fmt.Errorf("unable to get parser for version %s", version)
+		}
+
+		doc, err := parser(data)
+		if err != nil {
+			return nil, fmt.Errorf("parsing document: %w", err)
+		}
+
+		return doc, nil
+	}
+
 	if bytes.Contains(data, []byte(`"csaf_version"`)) {
+		logrus.Info("Abriendo CSAF")
+
 		doc, err := OpenCSAF(path, []string{})
 		if err != nil {
 			return nil, fmt.Errorf("attempting to open csaf doc: %w", err)
@@ -242,11 +294,7 @@ func Open(path string) (*VEX, error) {
 		return doc, nil
 	}
 
-	doc, err := Parse(data)
-	if err != nil {
-		return nil, err
-	}
-	return doc, nil
+	return nil, fmt.Errorf("unable to detect document format reading %s", path)
 }
 
 // OpenCSAF opens a CSAF document and builds a VEX object from it.
@@ -317,11 +365,17 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 					}
 
 					v.Statements = append(v.Statements, Statement{
-						Vulnerability:   csafDoc.Vulnerabilities[i].CVE,
+						Vulnerability:   Vulnerability{Name: VulnerabilityID(csafDoc.Vulnerabilities[i].CVE)},
 						Status:          StatusFromCSAF(status),
 						Justification:   "", // Justifications are not machine readable in csaf, it seems
 						ActionStatement: just,
-						Products:        []string{productDict[productID]},
+						Products: []Product{
+							{
+								Component: Component{
+									ID: productID,
+								},
+							},
+						},
 					})
 				}
 			}
@@ -342,37 +396,80 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 	cString := fmt.Sprintf("%d", vexDoc.Timestamp.Unix())
 
 	// 2. Document version
-	cString += fmt.Sprintf(":%s", vexDoc.Version)
+	cString += fmt.Sprintf(":%d", vexDoc.Version)
 
-	// 3. Sort the statements
+	// 3. Author identity
+	cString += fmt.Sprintf(":%s", vexDoc.Author)
+
+	// 4. Sort the statements
 	stmts := vexDoc.Statements
 	SortStatements(stmts, *vexDoc.Timestamp)
 
-	// 4. Now add the data from each statement
+	// 5. Now add the data from each statement
 	//nolint:gocritic
 	for _, s := range stmts {
-		// 4a. Vulnerability
-		cString += fmt.Sprintf(":%s", s.Vulnerability)
-		// 4b. Status + Justification
+		// 5a. Vulnerability
+		cString += cstringFromVulnerability(s.Vulnerability)
+		// 5b. Status + Justification
 		cString += fmt.Sprintf(":%s:%s", s.Status, s.Justification)
-		// 4c. Statement time, in unixtime. If it exists, if not the doc's
+		// 5c. Statement time, in unixtime. If it exists, if not the doc's
 		if s.Timestamp != nil {
 			cString += fmt.Sprintf(":%d", s.Timestamp.Unix())
 		} else {
 			cString += fmt.Sprintf(":%d", vexDoc.Timestamp.Unix())
 		}
-		// 4d. Sorted products
-		prods := s.Products
+		// 5d. Sorted product strings
+		prods := []string{}
+		for _, p := range s.Products {
+			prodString := cstringFromComponent(p.Component)
+			if p.Subcomponents != nil && len(p.Subcomponents) > 0 {
+				for _, sc := range p.Subcomponents {
+					prodString += cstringFromComponent(sc.Component)
+				}
+			}
+			prods = append(prods, prodString)
+		}
 		sort.Strings(prods)
 		cString += fmt.Sprintf(":%s", strings.Join(prods, ":"))
 	}
 
-	// 5. Hash the string in sha256 and return
+	// 6. Hash the string in sha256 and return
 	h := sha256.New()
 	if _, err := h.Write([]byte(cString)); err != nil {
 		return "", fmt.Errorf("hashing canonicalization string: %w", err)
 	}
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+// cstringFromComponent returns a string concatenating the data of a component
+// this internal function is meant to generate a predicatable string to generate
+// the document's CanonicalHash
+func cstringFromComponent(c Component) string {
+	s := fmt.Sprintf(":%s", c.ID)
+
+	for algo, val := range c.Hashes {
+		s += fmt.Sprintf(":%s@%s", algo, val)
+	}
+
+	for t, id := range c.Identifiers {
+		s += fmt.Sprintf(":%s@%s", t, id)
+	}
+
+	return s
+}
+
+// cstringFromVulnerability returns a string concatenating the vulnerability
+// elements into a reproducible string that can be used to hash or index the
+// vulnerability data or the statement.
+func cstringFromVulnerability(v Vulnerability) string {
+	cString := fmt.Sprintf(":%s:%s", v.ID, v.Name)
+	list := []string{}
+	for i := range v.Aliases {
+		list = append(list, string(v.Aliases[i]))
+	}
+	sort.Strings(list)
+	cString += strings.Join(list, ":")
+	return cString
 }
 
 // GenerateCanonicalID generates an ID for the document. The ID will be
@@ -415,4 +512,9 @@ func DateFromEnv() (*time.Time, error) {
 		}
 	}
 	return &t, nil
+}
+
+// ContextLocator returns the locator string for the current OpenVEX version.
+func ContextLocator() string {
+	return fmt.Sprintf("%s/v%s", Context, SpecVersion)
 }

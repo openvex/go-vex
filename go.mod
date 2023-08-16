@@ -3,6 +3,7 @@ module github.com/openvex/go-vex
 go 1.19
 
 require (
+	github.com/google/go-cmp v0.5.9
 	github.com/in-toto/in-toto-golang v0.9.0
 	github.com/owenrumney/go-sarif v1.1.1
 	github.com/sirupsen/logrus v1.9.3
