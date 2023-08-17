@@ -413,3 +413,24 @@ func TestDocumentMatches(t *testing.T) {
 		require.Equal(t, tc.numMatches, len(matches), fmt.Sprintf("failed: %s", testCase))
 	}
 }
+
+func TestParseContext(t *testing.T) {
+	for tCase, tc := range map[string]struct {
+		docData   string
+		expected  string
+		shouldErr bool
+	}{
+		"Normal":        {`{"@context": "https://openvex.dev/ns"}`, "https://openvex.dev/ns", false},
+		"Other JSON":    {`{"document": { "category": "csaf_vex" } }`, "", false},
+		"Invalid JSON":  {`@context": "https://openvex.dev/ns`, "", true},
+		"Other json-ld": {`{"@context": "https://spdx.dev/"}`, "", false},
+	} {
+		res, err := parseContext([]byte(tc.docData))
+		if tc.shouldErr {
+			require.Error(t, err, tCase)
+			continue
+		}
+		require.NoError(t, err, tCase)
+		require.Equal(t, res, tc.expected, tCase)
+	}
+}
