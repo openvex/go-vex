@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -57,11 +56,6 @@ const (
 // DefaultNamespace is the URL that will be used to generate new IRIs for generated
 // documents and nodes. It is set to the OpenVEX public namespace by default.
 var DefaultNamespace = PublicNamespace
-
-var (
-	contextRegExpPattern = fmt.Sprintf(`"@context":\s+"(%s\S*)"`, Context)
-	contextRegExp        *regexp.Regexp
-)
 
 // The VEX type represents a VEX document and all of its contained information.
 type VEX struct {
@@ -265,6 +259,22 @@ func SortDocuments(docs []*VEX) []*VEX {
 	return docs
 }
 
+// parseContext light parses a JSON document to look for the OpenVEX context locator
+func parseContext(rawDoc []byte) (string, error) {
+	pd := struct {
+		Context string `json:"@context"`
+	}{}
+
+	if err := json.Unmarshal(rawDoc, &pd); err != nil {
+		return "", fmt.Errorf("parsing context from json data: %w", err)
+	}
+
+	if strings.HasPrefix(pd.Context, Context) {
+		return pd.Context, nil
+	}
+	return "", nil
+}
+
 // Open tries to autodetect the vex format and open it
 func Open(path string) (*VEX, error) {
 	data, err := os.ReadFile(path)
@@ -272,21 +282,15 @@ func Open(path string) (*VEX, error) {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
 	}
 
-	if bytes.Contains(data, []byte(ContextLocator())) {
-		logrus.Info("opening current vex")
+	documentContextLocator, err := parseContext(data)
+	if err != nil {
+		return nil, err
+	}
+
+	if documentContextLocator == ContextLocator() {
 		return Parse(data)
-	} else if bytes.Contains(data, []byte(Context)) {
-		logrus.Info("Opening older openvex")
-		if contextRegExp == nil {
-			contextRegExp = regexp.MustCompile(contextRegExpPattern)
-		}
-
-		res := contextRegExp.FindSubmatch(data)
-		if len(res) == 0 {
-			return nil, fmt.Errorf("unable to parse OpenVEX version in document context")
-		}
-
-		version := strings.TrimPrefix(string(res[1]), Context)
+	} else if documentContextLocator != "" {
+		version := strings.TrimPrefix(documentContextLocator, Context)
 		version = strings.TrimPrefix(version, "/")
 
 		// If version is nil, then we assume v0.0.1
