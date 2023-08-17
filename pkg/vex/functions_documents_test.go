@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMerge(t *testing.T) {
+func TestMergeDocumentsWithOptions(t *testing.T) {
 	doc1, err := Open("testdata/v001-1.vex.json")
 	require.NoError(t, err)
 	doc2, err := Open("testdata/v001-2.vex.json")
@@ -84,7 +84,7 @@ func TestMerge(t *testing.T) {
 			shouldErr: false,
 		},
 	} {
-		doc, err := MergeDocuments(&tc.opts, tc.docs)
+		doc, err := MergeDocumentsWithOptions(&tc.opts, tc.docs)
 		if tc.shouldErr {
 			require.Error(t, err)
 			continue
