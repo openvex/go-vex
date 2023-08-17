@@ -172,3 +172,37 @@ func SortStatements(stmts []Statement, documentTimestamp time.Time) {
 		return iTime.Before(*jTime)
 	})
 }
+
+// Matches returns true if the statement matches the specified vulnerability
+// identifier, the VEX product and any of the identifiers from the received list.
+func (stmt *Statement) Matches(vuln, product string, subcomponents []string) bool {
+	if !stmt.Vulnerability.Matches(vuln) {
+		return false
+	}
+
+	for i := range stmt.Products {
+		if len(subcomponents) == 0 {
+			if stmt.Products[i].Matches(product, "") {
+				return true
+			}
+		}
+
+		for _, sc := range subcomponents {
+			if stmt.Products[i].Matches(product, sc) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// MatchesProduct returns true if the statement matches the identifier string
+// with an optional subcomponent identifier
+func (stmt *Statement) MatchesProduct(identifier, subidentifier string) bool {
+	for _, p := range stmt.Products {
+		if p.Matches(identifier, subidentifier) {
+			return true
+		}
+	}
+	return false
+}

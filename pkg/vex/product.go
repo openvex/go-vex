@@ -5,32 +5,6 @@ SPDX-License-Identifier: Apache-2.0
 
 package vex
 
-// Component abstracts the common construct shared by product and subcomponents
-// allowing OpenVEX statements to point to a piece of software by referencing it
-// by hash or identifier.
-//
-// The ID should be an IRI uniquely identifying the product. Software can be
-// referenced as a VEX product or subcomponent using only its IRI or it may be
-// referenced by its crptographic hashes and/or other identifiers but, in no case,
-// must an IRI describe two different pieces of software or used to describe
-// a range of software.
-type Component struct {
-	// ID is an IRI identifying the component. It is optional as the component
-	// can also be identified using hashes or software identifiers.
-	ID string `json:"@id,omitempty"`
-
-	// Hashes is a map of hashes to identify the component using cryptographic
-	// hashes.
-	Hashes map[Algorithm]Hash `json:"hashes,omitempty"`
-
-	// Identifiers is a list of software identifiers that describe the component.
-	Identifiers map[IdentifierType]string `json:"identifiers,omitempty"`
-
-	// Supplier is an optional machine-readable identifier for the supplier of
-	// the component. Valid examples include email address or IRIs.
-	Supplier string `json:"supplier,omitempty"`
-}
-
 // Product abstracts the VEX product into a struct that can identify software
 // through various means. The main one is the ID field which contains an IRI
 // identifying the product, possibly pointing to another document with more data,
@@ -46,6 +20,28 @@ type Product struct {
 // and Subcomponent objects is that a Subcomponent cannot nest components.
 type Subcomponent struct {
 	Component
+}
+
+// Product returns true if an identifier and subcomponent identifier match any
+// of the identifiers in the product and subcomponents.
+func (p *Product) Matches(identifier, subIdentifier string) bool {
+	if !p.Component.Matches(identifier) {
+		return false
+	}
+
+	// If the product has no subcomponents or no subcomponent was specified,
+	// matching the product part is enough:
+	if len(p.Subcomponents) == 0 || subIdentifier == "" {
+		return true
+	}
+
+	for _, s := range p.Subcomponents {
+		if s.Component.Matches(subIdentifier) {
+			return true
+		}
+	}
+
+	return false
 }
 
 type (
