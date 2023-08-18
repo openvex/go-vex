@@ -1,0 +1,26 @@
+# Copyright 2023 The OpenVEX Authors
+# SPDX-License-Identifier: Apache-2.0
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # needed to write releases
+
+    steps:
+      - name: Install publish-release
+        uses: puerco/release-actions/setup-publish-release@9975072608f4adfb73144e8fc76603a6910f365e # main
+
+      - name: Publish Release
+        uses: puerco/release-actions/publish-release@9975072608f4adfb73144e8fc76603a6910f365e # main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
