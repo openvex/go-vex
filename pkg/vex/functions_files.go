@@ -217,3 +217,27 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 
 	return v, nil
 }
+
+// MergeFilesWithOptions opens a list of vex documents and after parsing them
+// merges them into a single file using the specified merge options.
+func MergeFilesWithOptions(mergeOpts *MergeOptions, filePaths []string) (*VEX, error) {
+	vexDocs := []*VEX{}
+	for i := range filePaths {
+		doc, err := Open(filePaths[i])
+		if err != nil {
+			return nil, fmt.Errorf("opening %s: %w", filePaths[i], err)
+		}
+		vexDocs = append(vexDocs, doc)
+	}
+	doc, err := MergeDocumentsWithOptions(mergeOpts, vexDocs)
+	if err != nil {
+		return nil, fmt.Errorf("merging opened files: %w", err)
+	}
+	return doc, nil
+}
+
+// MergeFiles is a convenience wrapper around MergeFilesWithOptions that
+// does not take options but performs the merge using the default options
+func MergeFiles(filePaths []string) (*VEX, error) {
+	return MergeFilesWithOptions(&MergeOptions{}, filePaths)
+}
