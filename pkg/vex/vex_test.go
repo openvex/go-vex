@@ -28,7 +28,7 @@ func TestEffectiveStatement(t *testing.T) {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
 						Timestamp:     &date1,
 						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusNotAffected,
@@ -45,13 +45,13 @@ func TestEffectiveStatement(t *testing.T) {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
 						Timestamp:     &date1,
 						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusUnderInvestigation,
 					},
 					{
-						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
 						Timestamp:     &date2,
 						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusNotAffected,
@@ -68,10 +68,36 @@ func TestEffectiveStatement(t *testing.T) {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
 						Timestamp:     &date1,
 						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
 						Status:        StatusUnderInvestigation,
+					},
+					{
+						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
+						Timestamp:     &date2,
+						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@2.0"}}},
+						Status:        StatusNotAffected,
+					},
+				},
+			},
+			vulnID:         "CVE-2014-123456",
+			product:        "pkg:deb/pkg@1.0",
+			shouldNil:      false,
+			expectedDate:   &date1,
+			expectedStatus: StatusUnderInvestigation,
+		},
+		"Vulnerability aliases": {
+			vexDoc: &VEX{
+				Statements: []Statement{
+					{
+						Vulnerability: Vulnerability{
+							Name:    "CVE-2014-123456",
+							Aliases: []VulnerabilityID{"ghsa-92xj-mqp7-vmcj"},
+						},
+						Timestamp: &date1,
+						Products:  []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Status:    StatusUnderInvestigation,
 					},
 					{
 						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
@@ -81,7 +107,7 @@ func TestEffectiveStatement(t *testing.T) {
 					},
 				},
 			},
-			vulnID:         "CVE-2014-123456",
+			vulnID:         "ghsa-92xj-mqp7-vmcj",
 			product:        "pkg:deb/pkg@1.0",
 			shouldNil:      false,
 			expectedDate:   &date1,
