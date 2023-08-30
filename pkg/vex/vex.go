@@ -145,13 +145,8 @@ func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
 	SortStatements(statements, t)
 
 	for i := len(statements) - 1; i >= 0; i-- {
-		if !statements[i].Vulnerability.Matches(vulnID) {
+		if !statements[i].Matches(vulnID, product, nil) {
 			continue
-		}
-		for _, p := range statements[i].Products {
-			if p.ID == product {
-				return &statements[i]
-			}
 		}
 	}
 	return nil
