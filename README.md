@@ -6,10 +6,10 @@ Go library for generating, consuming, and operating on VEX documents
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/openvex/go-vex)](https://pkg.go.dev/github.com/openvex/go-vex)
 [![Go Report Card](https://goreportcard.com/badge/github.com/openvex/go-vex)](https://goreportcard.com/report/github.com/openvex/go-vex)
 
-This repository contains the OpenVEX Go source code. This module lets 
+This repository contains the OpenVEX Go source code. This module lets
 authors create, modify and manage VEX documents.
 
-The full documentation for this module can be found at 
+The full documentation for this module can be found at
 https://pkg.go.dev/github.com/openvex/go-vex.
 
 For more information about the OpenVEX specification implemented by this module, check out the
@@ -48,25 +48,40 @@ func main() {
 	// that our git image is not affected by CVE-2023-12345 and why:
 	doc.Statements = append(doc.Statements, vex.Statement{
 		// ... define the vulnerability:
-		Vulnerability: "CVE-2023-12345",
-
-		// ... add an image as product:
-		Products: []string{
-			"pkg:oci/git@sha256:23a264e6e429852221a963e9f17338ba3f5796dc7086e46439a6f4482cf6e0cb",
+		Vulnerability: vex.Vulnerability{
+			ID:          "https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+			Name:        "CVE-2021-44228",
+			Description: "Remote code injection in Log4j",
+			Aliases: []vex.VulnerabilityID{
+				vex.VulnerabilityID("GHSA-jfh8-c2jp-5v3q"),
+			},
 		},
 
-		// ... specify optional subcomponents:
-		Subcomponents: []string{
-			"pkg:apk/alpine/git@2.38.1-r0?arch=x86_64",
-			"pkg:apk/alpine/git@2.38.1-r0?arch=ppc64le",
+		// ... add an image as product:
+		Products: []vex.Product{
+			{
+				Component: vex.Component{
+					ID: "pkg:maven/org.springframework.boot/spring-boot@2.6.0-M3",
+					Identifiers: map[vex.IdentifierType]string{
+						vex.PURL: "pkg:maven/org.springframework.boot/spring-boot@2.6.0-M3",
+					},
+					Hashes: map[vex.Algorithm]vex.Hash{
+						vex.SHA256: vex.Hash("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+					},
+				},
+
+				// ... specify optional subcomponents:
+				// Subcomponents: []vex.Subcomponent{},
+			},
+			// "pkg:oci/git@sha256:23a264e6e429852221a963e9f17338ba3f5796dc7086e46439a6f4482cf6e0cb",
 		},
 
 		// ... choose one of the VEX status labels:
 		Status: vex.StatusNotAffected,
 
 		// ... finally, a machine-readable justification and optional statement:
-		Justification:   vex.InlineMitigationsAlreadyExist,
-		ImpactStatement: "Included git is mitigated against CVE-2023-12345 !",
+		Justification:   vex.VulnerableCodeNotInExecutePath,
+		ImpactStatement: "Spring Boot users are only affected by this vulnerability if they ...",
 	})
 
 	// Generate a canonical identifier for the VEX document:
@@ -81,27 +96,37 @@ Running this example renders the following simple VEX document:
 
 ```json
 {
-  "@context": "https://openvex.dev/ns",
-  "@id": "https://openvex.dev/docs/public/vex-a06f9de1ad1b1e555a33b2d0c1e7e6ecc4dc1800ff457c61ea09d8e97670d2a3",
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://openvex.dev/docs/public/vex-6ccf08fbf67f1489f201bb2b79a024b55d2ce07763098c78822f2f25283703d8",
   "author": "Wolfi J. Inkinson",
   "role": "Senior VEXing Engineer",
-  "timestamp": "2023-01-09T21:23:03.579712389-06:00",
-  "version": "1",
+  "timestamp": "2023-09-21T15:32:30.728569-05:00",
+  "version": 1,
   "statements": [
     {
-      "vulnerability": "CVE-2023-12345",
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+        "name": "CVE-2021-44228",
+        "description": "Remote code injection in Log4j",
+        "aliases": [
+          "GHSA-jfh8-c2jp-5v3q"
+        ]
+      },
       "products": [
-        "pkg:oci/git@sha256:23a264e6e429852221a963e9f17338ba3f5796dc7086e46439a6f4482cf6e0cb"
-      ],
-      "subcomponents": [
-        "pkg:apk/alpine/git@2.38.1-r0?arch=x86_64",
-        "pkg:apk/alpine/git@2.38.1-r0?arch=ppc64le"
+        {
+          "@id": "pkg:maven/org.springframework.boot/spring-boot@2.6.0-M3",
+          "hashes": {
+            "sha-256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "identifiers": {
+            "purl": "pkg:maven/org.springframework.boot/spring-boot@2.6.0-M3"
+          }
+        }
       ],
       "status": "not_affected",
-      "justification": "inline_mitigations_already_exist",
-      "impact_statement": "Included git is mitigated against CVE-2023-12345 !"
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Spring Boot users are only affected by this vulnerability if they ..."
     }
   ]
 }
-
 ```
