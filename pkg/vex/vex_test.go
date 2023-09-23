@@ -141,6 +141,9 @@ func genTestDoc(t *testing.T) VEX {
 			{
 				Vulnerability: Vulnerability{
 					Name: "CVE-1234-5678",
+					Aliases: []VulnerabilityID{
+						VulnerabilityID("some vulnerability alias"),
+					},
 				},
 				Products: []Product{
 					{
@@ -163,7 +166,7 @@ func genTestDoc(t *testing.T) VEX {
 }
 
 func TestCanonicalHash(t *testing.T) {
-	goldenHash := `a85519b483f5740f787986d9a72aa4990e79636c7c526d5e2bd7114dc05269d2`
+	goldenHash := `3edda795cc8f075902800f0bb6a24f89b49e7e45fbceea96ce6061097460f139`
 
 	otherTS, err := time.Parse(time.RFC3339, "2019-01-22T16:36:43-05:00")
 	require.NoError(t, err)
@@ -186,7 +189,7 @@ func TestCanonicalHash(t *testing.T) {
 					Status: "affected",
 				})
 			},
-			"d5e5fc62190aaf6128139ac45d24a73dbcf6564a3404621c6b5c9e440f072c86",
+			"662d88a939419d4dc61406c3180711a89a729272abeabf2be7ef76c8c42fdfda",
 			false,
 		},
 		// Changing metadata should not change hash
@@ -216,7 +219,7 @@ func TestCanonicalHash(t *testing.T) {
 			func(v *VEX) {
 				v.Statements[0].Products[0].ID = "cool router, bro"
 			},
-			"b875594ad77fed770931b15854c861a8d098fc15a36aec13526ec0abb4d2ace3",
+			"6caa2fb361667bb70c5be5e70df2982c75a7a848d9de050397a87dc4c515566c",
 			false,
 		},
 		// Changing document time changes the hash
@@ -224,7 +227,7 @@ func TestCanonicalHash(t *testing.T) {
 			func(v *VEX) {
 				v.Timestamp = &otherTS
 			},
-			"9d7c3f6a441332f7f04d78a7d311174a0622209204228aa31dd4d5dffb6bb884",
+			"b9e10ecafe5afbdd36582f932550ae42e4301849909a12305d75a7c268d95922",
 			false,
 		},
 		// Same timestamp in statement as doc should not change the hash
@@ -256,7 +259,7 @@ func TestGenerateCanonicalID(t *testing.T) {
 		{
 			// Normal generation
 			prepare:    func(v *VEX) {},
-			expectedID: "https://openvex.dev/docs/public/vex-a85519b483f5740f787986d9a72aa4990e79636c7c526d5e2bd7114dc05269d2",
+			expectedID: "https://openvex.dev/docs/public/vex-3edda795cc8f075902800f0bb6a24f89b49e7e45fbceea96ce6061097460f139",
 		},
 		{
 			// Existing IDs should not be changed
