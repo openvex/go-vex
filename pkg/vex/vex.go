@@ -270,7 +270,7 @@ func cstringFromVulnerability(v Vulnerability) string {
 		list = append(list, string(v.Aliases[i]))
 	}
 	sort.Strings(list)
-	cString += strings.Join(list, ":")
+	cString += fmt.Sprintf(":%s", strings.Join(list, ":"))
 	return cString
 }
 
