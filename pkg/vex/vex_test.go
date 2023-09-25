@@ -166,6 +166,7 @@ func genTestDoc(t *testing.T) VEX {
 }
 
 func TestCanonicalHash(t *testing.T) {
+	//nolint:gosec // Not a credential
 	goldenHash := `3edda795cc8f075902800f0bb6a24f89b49e7e45fbceea96ce6061097460f139`
 
 	otherTS, err := time.Parse(time.RFC3339, "2019-01-22T16:36:43-05:00")
