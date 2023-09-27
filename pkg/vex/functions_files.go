@@ -9,12 +9,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/openvex/go-vex/pkg/csaf"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -118,7 +118,7 @@ func Open(path string) (*VEX, error) {
 	}
 
 	if bytes.Contains(data, []byte(`"csaf_version"`)) {
-		logrus.Info("Abriendo CSAF")
+		slog.Info("Abriendo CSAF")
 
 		doc, err := OpenCSAF(path, []string{})
 		if err != nil {

@@ -23,28 +23,28 @@ func TestMergeDocumentsWithOptions(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, tc := range []struct {
-		opts        MergeOptions
+		opts        *MergeOptions
 		docs        []*VEX
 		expectedDoc *VEX
 		shouldErr   bool
 	}{
 		// Zero docs should fail
 		{
-			opts:        MergeOptions{},
+			opts:        &MergeOptions{},
 			docs:        []*VEX{},
 			expectedDoc: &VEX{},
 			shouldErr:   true,
 		},
 		// One doc results in the same doc
 		{
-			opts:        MergeOptions{},
+			opts:        &MergeOptions{},
 			docs:        []*VEX{doc1},
 			expectedDoc: doc1,
 			shouldErr:   false,
 		},
 		// Two docs, as they are
 		{
-			opts: MergeOptions{},
+			opts: &MergeOptions{},
 			docs: []*VEX{doc1, doc2},
 			expectedDoc: &VEX{
 				Metadata: Metadata{},
@@ -57,7 +57,7 @@ func TestMergeDocumentsWithOptions(t *testing.T) {
 		},
 		// Two docs, filter product
 		{
-			opts: MergeOptions{
+			opts: &MergeOptions{
 				Products: []string{"pkg:apk/wolfi/git@2.41.0-1"},
 			},
 			docs: []*VEX{doc3, doc4},
@@ -71,7 +71,7 @@ func TestMergeDocumentsWithOptions(t *testing.T) {
 		},
 		// Two docs, filter vulnerability
 		{
-			opts: MergeOptions{
+			opts: &MergeOptions{
 				Vulnerabilities: []string{"CVE-9876-54321"},
 			},
 			docs: []*VEX{doc3, doc4},
@@ -84,7 +84,7 @@ func TestMergeDocumentsWithOptions(t *testing.T) {
 			shouldErr: false,
 		},
 	} {
-		doc, err := MergeDocumentsWithOptions(&tc.opts, tc.docs)
+		doc, err := MergeDocumentsWithOptions(tc.opts, tc.docs)
 		if tc.shouldErr {
 			require.Error(t, err)
 			continue

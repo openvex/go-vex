@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"sort"
 	"strconv"
@@ -17,7 +18,6 @@ import (
 	"time"
 
 	"github.com/package-url/packageurl-go"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -103,7 +103,7 @@ func New() VEX {
 	now := time.Now()
 	t, err := DateFromEnv()
 	if err != nil {
-		logrus.Warn(err)
+		slog.Warn(err.Error())
 	}
 	if t != nil {
 		now = *t
@@ -156,7 +156,7 @@ func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
 //
 // Deprecated: vex.StatementFromID is deprecated and will be removed in an upcoming version
 func (vexDoc *VEX) StatementFromID(id string) *Statement {
-	logrus.Warn("vex.StatementFromID is deprecated and will be removed in an upcoming version")
+	slog.Warn("vex.StatementFromID is deprecated and will be removed in an upcoming version")
 	for i := range vexDoc.Statements {
 		if string(vexDoc.Statements[i].Vulnerability.Name) == id && len(vexDoc.Statements[i].Products) > 0 {
 			return vexDoc.EffectiveStatement(vexDoc.Statements[i].Products[0].ID, id)
