@@ -232,7 +232,7 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 			prods = append(prods, prodString)
 		}
 		sort.Strings(prods)
-		cString += fmt.Sprintf(":%s", strings.Join(prods, ":"))
+		cString += strings.Join(prods, ":")
 	}
 
 	// 6. Hash the string in sha256 and return

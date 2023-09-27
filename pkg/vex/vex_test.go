@@ -167,7 +167,7 @@ func genTestDoc(t *testing.T) VEX {
 
 func TestCanonicalHash(t *testing.T) {
 	//nolint:gosec // Not a credential
-	goldenHash := `3edda795cc8f075902800f0bb6a24f89b49e7e45fbceea96ce6061097460f139`
+	goldenHash := `8ed99017785c3b43219018c7c50353c031cdaaf1c7efc146c683b0ce57123cf6`
 
 	otherTS, err := time.Parse(time.RFC3339, "2019-01-22T16:36:43-05:00")
 	require.NoError(t, err)
@@ -190,7 +190,7 @@ func TestCanonicalHash(t *testing.T) {
 					Status: "affected",
 				})
 			},
-			"662d88a939419d4dc61406c3180711a89a729272abeabf2be7ef76c8c42fdfda",
+			"cbfbba00d118572164b5b934e3ced71c1b02e171f942abfe66d42775dba703cf",
 			false,
 		},
 		// Changing metadata should not change hash
@@ -220,7 +220,7 @@ func TestCanonicalHash(t *testing.T) {
 			func(v *VEX) {
 				v.Statements[0].Products[0].ID = "cool router, bro"
 			},
-			"6caa2fb361667bb70c5be5e70df2982c75a7a848d9de050397a87dc4c515566c",
+			"010aaeb3d6bf69c486e199a48ec40038ca347d2603142dd48d97937d8477fe37",
 			false,
 		},
 		// Changing document time changes the hash
@@ -228,7 +228,7 @@ func TestCanonicalHash(t *testing.T) {
 			func(v *VEX) {
 				v.Timestamp = &otherTS
 			},
-			"b9e10ecafe5afbdd36582f932550ae42e4301849909a12305d75a7c268d95922",
+			"d585979c1cc06797d2486382b3fd5e95d3a9b416525c95c9fefcef9863a595c8",
 			false,
 		},
 		// Same timestamp in statement as doc should not change the hash
@@ -260,7 +260,7 @@ func TestGenerateCanonicalID(t *testing.T) {
 		{
 			// Normal generation
 			prepare:    func(v *VEX) {},
-			expectedID: "https://openvex.dev/docs/public/vex-3edda795cc8f075902800f0bb6a24f89b49e7e45fbceea96ce6061097460f139",
+			expectedID: "https://openvex.dev/docs/public/vex-8ed99017785c3b43219018c7c50353c031cdaaf1c7efc146c683b0ce57123cf6",
 		},
 		{
 			// Existing IDs should not be changed
