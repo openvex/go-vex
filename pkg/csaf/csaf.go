@@ -38,6 +38,7 @@ type DocumentMetadata struct {
 	Title      string      `json:"title"`
 	Tracking   Tracking    `json:"tracking"`
 	References []Reference `json:"references"`
+	Publisher  Publisher   `json:"publisher"`
 }
 
 // Document references holds a list of references associated with the whole document.
@@ -56,6 +57,17 @@ type Tracking struct {
 	ID                 string    `json:"id"`
 	CurrentReleaseDate time.Time `json:"current_release_date"`
 	InitialReleaseDate time.Time `json:"initial_release_date"`
+}
+
+// Publisher provides information on the publishing entity.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3218-document-property---publisher
+type Publisher struct {
+	Category         string `json:"category"`
+	ContactDetails   string `json:"contact_details"`
+	IssuingAuthority string `json:"issuing_authority"`
+	Name             string `json:"name"`
+	Namespace        string `json:"namespace"`
 }
 
 // Vulnerability contains information about a CVE and its associated threats.

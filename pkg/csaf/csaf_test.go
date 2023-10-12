@@ -34,6 +34,13 @@ func TestOpenRHAdvisory(t *testing.T) {
 	require.Equal(t, "AppStream-8.1.0.Z.MAIN.EUS", doc.FirstProductName())
 
 	require.Equal(t, "https://bugzilla.redhat.com/show_bug.cgi?id=1794290", doc.Vulnerabilities[0].IDs[0].Text)
+
+	// Publisher
+	require.Equal(t, doc.Document.Publisher.Category, "vendor")
+	require.Equal(t, doc.Document.Publisher.ContactDetails, "https://access.redhat.com/security/team/contact/")
+	require.Equal(t, doc.Document.Publisher.IssuingAuthority, "Red Hat Product Security is responsible for vulnerability handling across all Red Hat offerings.")
+	require.Equal(t, doc.Document.Publisher.Name, "Red Hat Product Security")
+	require.Equal(t, doc.Document.Publisher.Namespace, "https://www.redhat.com")
 }
 
 func TestFindFirstProduct(t *testing.T) {
