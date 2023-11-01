@@ -26,6 +26,10 @@ type CSAF struct {
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#323-vulnerabilities-property
 	Vulnerabilities []Vulnerability `json:"vulnerabilities"`
+
+	// Notes holds notes associated with the whole document.
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3217-document-property---notes
+	Notes []Note `json:"notes"`
 }
 
 // DocumentMetadata contains metadata about the CSAF document itself.
@@ -110,6 +114,13 @@ type Vulnerability struct {
 	References []Reference `json:"references"`
 
 	ReleaseDate time.Time `json:"release_date"`
+}
+
+type Note struct {
+	Category string `json:"category"`
+	Text     string `json:"text"`
+	Title    string `json:"title"`
+	Audience string `json:"audience"`
 }
 
 // Every ID item with the two mandatory properties System Name (system_name) and Text (text) contains a single unique label or tracking ID for the vulnerability.
