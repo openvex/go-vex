@@ -206,3 +206,53 @@ func (stmt *Statement) MatchesProduct(identifier, subidentifier string) bool {
 	}
 	return false
 }
+
+// DeepCopyInto copies the receiver and writes its value into out.
+func (stmt *Statement) DeepCopyInto(out *Statement) {
+	*out = *stmt
+
+	if stmt.Timestamp != nil {
+		*out = *stmt
+		out.Timestamp = new(time.Time)
+		*out.Timestamp = *stmt.Timestamp
+	}
+
+	if stmt.LastUpdated != nil {
+		*out = *stmt
+		out.LastUpdated = new(time.Time)
+		*out.LastUpdated = *stmt.LastUpdated
+	}
+
+	if stmt.Products != nil {
+		*out = *stmt
+		out.Products = make([]Product, len(stmt.Products))
+		copy(out.Products, stmt.Products)
+	}
+
+	*out = *stmt
+	out.Vulnerability = Vulnerability{}
+	stmt.Vulnerability.DeepCopyInto(&out.Vulnerability)
+
+	if stmt.Justification != "" {
+		*out = *stmt
+		out.Justification = stmt.Justification
+	}
+
+	if stmt.ActionStatementTimestamp != nil {
+		*out = *stmt
+		out.ActionStatementTimestamp = new(time.Time)
+		*out.ActionStatementTimestamp = *stmt.ActionStatementTimestamp
+	}
+
+	return
+}
+
+// DeepCopy copies the receiver and returns a new Statement.
+func (stmt *Statement) DeepCopy() *Statement {
+	if stmt == nil {
+		return nil
+	}
+	out := new(Statement)
+	stmt.DeepCopyInto(out)
+	return out
+}

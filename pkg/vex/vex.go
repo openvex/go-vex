@@ -389,3 +389,23 @@ func (vexDoc *VEX) StatementsByVulnerability(id string) []Statement {
 	SortStatements(ret, *vexDoc.Timestamp)
 	return ret
 }
+
+// DeepCopy returns a deep copy of the VEX document.
+func (vexDoc *VEX) DeepCopy() *VEX {
+	if vexDoc == nil {
+		return nil
+	}
+	out := new(VEX)
+	vexDoc.DeepCopyInto(out)
+	return out
+}
+
+// DeepCopyInto copies the receiver and writes its value into out.
+func (vexDoc *VEX) DeepCopyInto(out *VEX) {
+	*out = *vexDoc
+	out.Metadata = vexDoc.Metadata
+	out.Statements = []Statement{}
+	for _, s := range vexDoc.Statements {
+		out.Statements = append(out.Statements, *s.DeepCopy())
+	}
+}
