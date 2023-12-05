@@ -6,6 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 package vex
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -205,4 +206,28 @@ func (stmt *Statement) MatchesProduct(identifier, subidentifier string) bool {
 		}
 	}
 	return false
+}
+
+// MarshalJSON the document object overrides its marshaling function to normalize
+// the timezones in all dates to Zulu.
+func (stmt *Statement) MarshalJSON() ([]byte, error) {
+	type alias Statement
+	var ts, lu string
+
+	if stmt.Timestamp != nil {
+		ts = stmt.Timestamp.UTC().Format(time.RFC3339Nano)
+	}
+	if stmt.LastUpdated != nil {
+		lu = stmt.LastUpdated.UTC().Format(time.RFC3339Nano)
+	}
+
+	return json.Marshal(&struct {
+		*alias
+		TimeZonedTimestamp   string `json:"timestamp"`
+		TimeZonedLastUpdated string `json:"last_updated,omitempty"`
+	}{
+		alias:                (*alias)(stmt),
+		TimeZonedTimestamp:   ts,
+		TimeZonedLastUpdated: lu,
+	})
 }

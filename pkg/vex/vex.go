@@ -132,6 +132,30 @@ func (vexDoc *VEX) ToJSON(w io.Writer) error {
 	return nil
 }
 
+// MarshalJSON the document object overrides its marshaling function to normalize
+// the timezones in all dates to Zulu.
+func (vexDoc *VEX) MarshalJSON() ([]byte, error) {
+	type alias VEX
+	var ts, lu string
+
+	if vexDoc.Timestamp != nil {
+		ts = vexDoc.Timestamp.UTC().Format(time.RFC3339)
+	}
+	if vexDoc.LastUpdated != nil {
+		lu = vexDoc.LastUpdated.UTC().Format(time.RFC3339)
+	}
+
+	return json.Marshal(&struct {
+		*alias
+		TimeZonedTimestamp   string `json:"timestamp"`
+		TimeZonedLastUpdated string `json:"last_updated,omitempty"`
+	}{
+		TimeZonedTimestamp:   ts,
+		TimeZonedLastUpdated: lu,
+		alias:                (*alias)(vexDoc),
+	})
+}
+
 // EffectiveStatement returns the latest VEX statement for a given product and
 // vulnerability, that is the statement that contains the latest data about
 // impact to a given product.
