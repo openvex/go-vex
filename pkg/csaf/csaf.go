@@ -114,6 +114,15 @@ type Vulnerability struct {
 	References []Reference `json:"references"`
 
 	ReleaseDate time.Time `json:"release_date"`
+
+	// Notes holds notes associated with the Vulnerability object.
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3238-vulnerabilities-property---notes
+	Notes []Note `json:"notes"`
+
+	// Scores holds the scores associated with the Vulnerability object.
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32313-vulnerabilities-property---scores
+	// Currently only CVSS v3 is supported.
+	Scores []Score `json:"scores"`
 }
 
 type Note struct {
@@ -201,6 +210,55 @@ type Product struct {
 	Name                 string            `json:"name"`
 	ID                   string            `json:"product_id"`
 	IdentificationHelper map[string]string `json:"product_identification_helper"`
+}
+
+// Score contains score information tied to the listed products.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32313-vulnerabilities-property---scores
+type Score struct {
+	CVSSV2     CVSSV2   `json:"cvss_v2"`
+	CVSSV3     CVSSV3   `json:"cvss_v3"`
+	ProductIDs []string `json:"products"`
+}
+
+// CVSSV2 describes CVSSv2.0 specification as defined here:
+//   - https://www.first.org/cvss/cvss-v2.0.json
+type CVSSV2 struct {
+	AccessVector               string  `json:"accessVector"`
+	AccessComplexity           string  `json:"accessComplexity"`
+	Authentication             string  `json:"authentication"`
+	ConfidentialityImpact      string  `json:"confidentialityImpact"`
+	IntegrityImpact            string  `json:"integrityImpact"`
+	AvailabilityImpact         string  `json:"availabilityImpact"`
+	BaseScore                  float64 `json:"baseScore"`
+	Exploitability             string  `json:"exploitability"`
+	RemediationLevel           string  `json:"remediationLevel"`
+	ReportConfidence           string  `json:"reportConfidence"`
+	TemporalScore              float64 `json:"temporalScore"`
+	CollateralDamagePotential  string  `json:"collateralDamagePotential"`
+	TargetDistribution         string  `json:"targetDistribution"`
+	ConfidentialityRequirement string  `json:"confidentialityRequirement"`
+	IntegrityRequirement       string  `json:"integrityRequirement"`
+	AvailabilityRequirement    string  `json:"availabilityRequirement"`
+	EnvironmentalScore         float64 `json:"environmentalScore"`
+}
+
+// CVSSV3 describes both the CVSSv3.0 and CVSSv3.1 specifications as defined here:
+//   - https://www.first.org/cvss/cvss-v3.0.json
+//   - https://www.first.org/cvss/cvss-v3.1.json
+type CVSSV3 struct {
+	AttackComplexity      string  `json:"attackComplexity"`
+	AttackVector          string  `json:"attackVector"`
+	AvailabilityImpact    string  `json:"availabilityImpact"`
+	BaseScore             float64 `json:"baseScore"`
+	BaseSeverity          string  `json:"baseSeverity"`
+	ConfidentialityImpact string  `json:"confidentialityImpact"`
+	IntegrityImpact       string  `json:"integrityImpact"`
+	PrivilegesRequired    string  `json:"privilegesRequired"`
+	Scope                 string  `json:"scope"`
+	UserInteraction       string  `json:"userInteraction"`
+	VectorString          string  `json:"vectorString"`
+	Version               string  `json:"version"`
 }
 
 // Open reads and parses a given file path and returns a CSAF document
