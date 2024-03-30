@@ -1,5 +1,6 @@
 # Copyright 2023 The OpenVEX Authors
 # SPDX-License-Identifier: Apache-2.0
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -33,17 +34,10 @@ LDFLAGS=-buildid= -X sigs.k8s.io/release-utils/version.gitVersion=$(GIT_VERSION)
 pkg: ## Build pkg
 	go build -trimpath -ldflags "$(LDFLAGS)" ./...
 
+.PHONY: build
+build: pkg
+
 ## Tests
 .PHONY: test
 test:
 	go test -v ./...
-
-## Release
-
-.PHONY: release
-release:
-	LDFLAGS="$(LDFLAGS)" goreleaser release --rm-dist --timeout 120m
-
-.PHONY: snapshot
-snapshot:
-	LDFLAGS="$(LDFLAGS)" goreleaser release --rm-dist --snapshot --skip-sign --skip-publish --timeout 120m
