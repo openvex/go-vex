@@ -166,7 +166,7 @@ func genTestDoc(t *testing.T) VEX {
 }
 
 func TestCanonicalHash(t *testing.T) {
-	//nolint:gosec // Not a credential
+	// Not a credential
 	goldenHash := `8ed99017785c3b43219018c7c50353c031cdaaf1c7efc146c683b0ce57123cf6`
 
 	otherTS, err := time.Parse(time.RFC3339, "2019-01-22T16:36:43-05:00")
@@ -178,7 +178,7 @@ func TestCanonicalHash(t *testing.T) {
 		shouldErr bool
 	}{
 		// Default Expected
-		{func(v *VEX) {}, goldenHash, false},
+		{func(_ *VEX) {}, goldenHash, false},
 		// Adding a statement changes the hash
 		{
 			func(v *VEX) {
@@ -259,7 +259,7 @@ func TestGenerateCanonicalID(t *testing.T) {
 	}{
 		{
 			// Normal generation
-			prepare:    func(v *VEX) {},
+			prepare:    func(_ *VEX) {},
 			expectedID: "https://openvex.dev/docs/public/vex-8ed99017785c3b43219018c7c50353c031cdaaf1c7efc146c683b0ce57123cf6",
 		},
 		{
