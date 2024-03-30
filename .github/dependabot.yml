@@ -1,6 +1,7 @@
 # Copyright 2023 The OpenVEX Authors
 # SPDX-License-Identifier: Apache-2.0
 
+---
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -10,9 +11,19 @@ updates:
       # Run every weekday
       interval: "daily"
     open-pull-requests-limit: 10
+    groups:
+      all:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: gomod
     directory: "/"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 10
+    groups:
+      all:
+        update-types:
+          - "minor"
+          - "patch"

@@ -1,7 +1,9 @@
+# Copyright 2023 The OpenVEX Authors
+# SPDX-License-Identifier: Apache-2.0
+
 ---
 run:
   concurrency: 6
-  deadline: 5m
 issues:
   exclude-rules:
     # counterfeiter fakes are usually named 'fake_<something>.go'
