@@ -371,3 +371,24 @@ func TestParseContext(t *testing.T) {
 		require.Equal(t, res, tc.expected, tCase)
 	}
 }
+
+func TestDeepCopyOfVex(t *testing.T) {
+	vex := genTestDoc(t)
+
+	// Make a copy of the vex document
+	vexCopy := vex.DeepCopy()
+
+	// Compare the two documents
+	require.Equal(t, vex, *vexCopy)
+
+	// Change the copy
+	vexCopy.ID = "new ID"
+	require.NotEqual(t, vex, *vexCopy)
+
+	// Change the original
+	originalAlias := vex.Statements[0].Vulnerability.Aliases[0]
+	vex.Statements[0].Vulnerability.Aliases[0] = VulnerabilityID("new alias")
+	require.NotEqual(t, vex, *vexCopy)
+	require.Equal(t, originalAlias, vexCopy.Statements[0].Vulnerability.Aliases[0])
+
+}
