@@ -248,7 +248,7 @@ func (vexDoc *VEX) CanonicalHash() (string, error) {
 		prods := []string{}
 		for _, p := range s.Products {
 			prodString := cstringFromComponent(p.Component)
-			if p.Subcomponents != nil && len(p.Subcomponents) > 0 {
+			if p.Subcomponents != nil && len(p.Subcomponents) > 0 { //nolint: gosimple
 				for _, sc := range p.Subcomponents {
 					prodString += cstringFromComponent(sc.Component)
 				}
