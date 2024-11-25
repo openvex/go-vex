@@ -24,6 +24,6 @@ require (
 require (
 	github.com/package-url/packageurl-go v0.1.3
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/sys v0.15.0 // indirect
 )
