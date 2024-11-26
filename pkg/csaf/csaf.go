@@ -160,6 +160,7 @@ type RemediationData struct {
 	GroupIDs     []string    `json:"group_ids"`
 	ProductIDs   []string    `json:"product_ids"`
 	Restart      RestartData `json:"restart_required"`
+	Url          string      `json:"url"`
 }
 
 // Remediation instructions for restart of affected software.

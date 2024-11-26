@@ -41,6 +41,9 @@ func TestOpenRHAdvisory(t *testing.T) {
 	require.Equal(t, doc.Document.Publisher.IssuingAuthority, "Red Hat Product Security is responsible for vulnerability handling across all Red Hat offerings.")
 	require.Equal(t, doc.Document.Publisher.Name, "Red Hat Product Security")
 	require.Equal(t, doc.Document.Publisher.Namespace, "https://www.redhat.com")
+
+	// Remediation Url
+	require.Equal(t, doc.Vulnerabilities[0].Remediations[0].Url, "https://access.redhat.com/errata/RHSA-2020:1358")
 }
 
 func TestFindFirstProduct(t *testing.T) {
