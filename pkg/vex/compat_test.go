@@ -1,19 +1,15 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParse001(t *testing.T) {
@@ -57,8 +53,8 @@ func TestParse001(t *testing.T) {
 			return
 		}
 
-		require.True(t, cmp.Equal(doc.Metadata, tc.expected.Metadata), fmt.Sprintf("%+v + %+v", doc.Metadata, tc.expected.Metadata))
-		require.Equal(t, doc.Statements, tc.expected.Statements, fmt.Sprintf("%+v + %+v", doc.Statements, tc.expected.Statements))
+		require.True(t, cmp.Equal(doc.Metadata, tc.expected.Metadata), "%+v + %+v", doc.Metadata, tc.expected.Metadata)
+		require.Equal(t, doc.Statements, tc.expected.Statements, "%+v + %+v", doc.Statements, tc.expected.Statements)
 		require.True(t, cmp.Equal(doc, tc.expected), msg)
 
 		require.NoError(t, err, msg)

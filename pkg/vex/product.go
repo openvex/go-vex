@@ -1,7 +1,5 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
@@ -36,7 +34,7 @@ func (p *Product) Matches(identifier, subIdentifier string) bool {
 	}
 
 	for _, s := range p.Subcomponents {
-		if s.Component.Matches(subIdentifier) {
+		if s.Matches(subIdentifier) {
 			return true
 		}
 	}
