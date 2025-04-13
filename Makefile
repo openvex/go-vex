@@ -41,3 +41,8 @@ build: pkg
 .PHONY: test
 test:
 	go test -v ./...
+
+.PHONY: test-cover
+test-cover:
+	go test -v -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
