@@ -120,6 +120,43 @@
           ]
         }
       ]
+    },
+    {
+      "cve": "CVE-2009-4488",
+      "notes": [
+        {
+          "category": "description",
+          "text": "Example software foo v1.2.3 has denial of service vulnerability",
+          "title": "CVE description"
+        }
+      ],
+      "product_status": {
+        "known_not_affected": [
+          "CSAFPID-0001"
+        ],
+        "known_affected": [
+          "ABC:CSAFPID-0002"
+        ]
+      },
+      "remediations": [
+        {
+          "category": "mitigation",
+          "details": "Configure a reverse proxy to limit the size of POST request bodies to 1000 bytes before forwarding them to the vulnerable application.",
+          "product_ids": [
+            "CSAFPID-0001"
+          ],
+          "url": "https://example.com/foo/v1.2.3/mitigation"
+        }
+      ],
+      "threats": [
+        {
+          "category": "impact",
+          "details": "Class with vulnerable code was removed before shipping.",
+          "product_ids": [
+            "CSAFPID-0001"
+          ]
+        }
+      ]
     }
   ]
 }

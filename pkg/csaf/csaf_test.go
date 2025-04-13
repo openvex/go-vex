@@ -17,11 +17,11 @@ func TestOpen(t *testing.T) {
 	require.Equal(t, "CSAFPID-0001", doc.FirstProductName())
 
 	// Vulnerabilities
-	require.Len(t, doc.Vulnerabilities, 1)
+	require.Len(t, doc.Vulnerabilities, 2)
 	require.Equal(t, "CVE-2009-4487", doc.Vulnerabilities[0].CVE)
-	require.Len(t, doc.Vulnerabilities[0].ProductStatus, 2)
-	require.Len(t, doc.Vulnerabilities[0].ProductStatus["known_not_affected"], 1)
 	require.Equal(t, "CSAFPID-0001", doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0])
+	require.Equal(t, "CVE-2009-4488", doc.Vulnerabilities[1].CVE)
+	require.Equal(t, "https://example.com/foo/v1.2.3/mitigation", doc.Vulnerabilities[1].Remediations[0].URL)
 }
 
 func TestOpenRHAdvisory(t *testing.T) {
