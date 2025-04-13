@@ -1,3 +1,6 @@
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
+
 package csaf
 
 import (
@@ -264,11 +267,11 @@ type CVSSV3 struct {
 // Open reads and parses a given file path and returns a CSAF document
 // or an error if the file could not be opened or parsed.
 func Open(path string) (*CSAF, error) {
-	fh, err := os.Open(path)
+	fh, err := os.Open(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("csaf: failed to open document: %w", err)
 	}
-	defer fh.Close()
+	defer fh.Close() //nolint:errcheck
 
 	csafDoc := &CSAF{}
 	err = json.NewDecoder(fh).Decode(csafDoc)

@@ -1,7 +1,5 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package attestation
 
@@ -29,7 +27,7 @@ func TestSerialize(t *testing.T) {
 	att2 := New()
 	err = json.Unmarshal(b.Bytes(), &att2)
 	require.NoError(t, err)
-	require.Equal(t, att2.Predicate.Author, "Chainguard")
+	require.Equal(t, "Chainguard", att2.Predicate.Author)
 }
 
 func TestAddSubjects(t *testing.T) {

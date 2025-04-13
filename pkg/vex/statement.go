@@ -1,7 +1,5 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
@@ -68,7 +66,7 @@ type Statement struct {
 // Validate checks to see whether the given Statement is valid. If it's not, an
 // error is returned explaining the reason the Statement is invalid. Otherwise,
 // nil is returned.
-func (stmt Statement) Validate() error { //nolint:gocritic // turning off for rule hugeParam
+func (stmt *Statement) Validate() error {
 	if s := stmt.Status; !s.Valid() {
 		return fmt.Errorf("invalid status value %q, must be one of [%s]", s, strings.Join(Statuses(), ", "))
 	}

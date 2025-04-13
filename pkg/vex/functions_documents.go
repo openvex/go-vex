@@ -1,7 +1,5 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
@@ -115,7 +113,7 @@ func MergeDocumentsWithOptions(mergeOpts *MergeOptions, docs []*VEX) (*VEX, erro
 		}
 	}
 
-	SortStatements(ss, *newDoc.Metadata.Timestamp)
+	SortStatements(ss, *newDoc.Timestamp)
 
 	newDoc.Statements = ss
 

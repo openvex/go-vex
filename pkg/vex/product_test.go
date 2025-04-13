@@ -1,12 +1,9 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -95,6 +92,6 @@ func TestProductMatches(t *testing.T) {
 			mustMach:     true,
 		},
 	} {
-		require.Equal(t, tc.mustMach, tc.sut.Matches(tc.product, tc.subcomponent), fmt.Sprintf("failed: %s", testCase))
+		require.Equal(t, tc.mustMach, tc.sut.Matches(tc.product, tc.subcomponent), "failed: %s", testCase)
 	}
 }

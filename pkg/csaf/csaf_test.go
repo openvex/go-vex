@@ -1,7 +1,5 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package csaf
 
@@ -20,10 +18,10 @@ func TestOpen(t *testing.T) {
 
 	// Vulnerabilities
 	require.Len(t, doc.Vulnerabilities, 1)
-	require.Equal(t, doc.Vulnerabilities[0].CVE, "CVE-2009-4487")
+	require.Equal(t, "CVE-2009-4487", doc.Vulnerabilities[0].CVE)
 	require.Len(t, doc.Vulnerabilities[0].ProductStatus, 2)
 	require.Len(t, doc.Vulnerabilities[0].ProductStatus["known_not_affected"], 1)
-	require.Equal(t, doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0], "CSAFPID-0001")
+	require.Equal(t, "CSAFPID-0001", doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0])
 }
 
 func TestOpenRHAdvisory(t *testing.T) {
@@ -36,11 +34,10 @@ func TestOpenRHAdvisory(t *testing.T) {
 	require.Equal(t, "https://bugzilla.redhat.com/show_bug.cgi?id=1794290", doc.Vulnerabilities[0].IDs[0].Text)
 
 	// Publisher
-	require.Equal(t, doc.Document.Publisher.Category, "vendor")
-	require.Equal(t, doc.Document.Publisher.ContactDetails, "https://access.redhat.com/security/team/contact/")
-	require.Equal(t, doc.Document.Publisher.IssuingAuthority, "Red Hat Product Security is responsible for vulnerability handling across all Red Hat offerings.")
-	require.Equal(t, doc.Document.Publisher.Name, "Red Hat Product Security")
-	require.Equal(t, doc.Document.Publisher.Namespace, "https://www.redhat.com")
+	require.Equal(t, "vendor", doc.Document.Publisher.Category)
+	require.Equal(t, "https://access.redhat.com/security/team/contact/", doc.Document.Publisher.ContactDetails)
+	require.Equal(t, "Red Hat Product Security is responsible for vulnerability handling across all Red Hat offerings.", doc.Document.Publisher.IssuingAuthority)
+	require.Equal(t, "https://www.redhat.com", doc.Document.Publisher.Namespace)
 }
 
 func TestFindFirstProduct(t *testing.T) {
@@ -49,7 +46,7 @@ func TestFindFirstProduct(t *testing.T) {
 	require.NotNil(t, doc)
 
 	prod := doc.ProductTree.FindFirstProduct()
-	require.Equal(t, prod, "CSAFPID-0001")
+	require.Equal(t, "CSAFPID-0001", prod)
 }
 
 func TestFindByHelper(t *testing.T) {
@@ -59,7 +56,7 @@ func TestFindByHelper(t *testing.T) {
 
 	prod := doc.ProductTree.FindProductIdentifier("purl", "pkg:maven/@1.3.4")
 	require.NotNil(t, prod)
-	require.Equal(t, prod.ID, "CSAFPID-0001")
+	require.Equal(t, "CSAFPID-0001", prod.ID)
 }
 
 func TestListProducts(t *testing.T) {
@@ -68,7 +65,7 @@ func TestListProducts(t *testing.T) {
 	require.NotNil(t, doc)
 	prods := doc.ProductTree.Branches[0].Branches[0].Branches[0].ListProducts()
 	require.Len(t, prods, 1)
-	require.Equal(t, prods[0].IdentificationHelper["purl"], "pkg:golang/github.com/go-homedir@v1.1.0")
+	require.Equal(t, "pkg:golang/github.com/go-homedir@v1.1.0", prods[0].IdentificationHelper["purl"])
 	require.Len(t, doc.ProductTree.Relationships, 1)
 
 	allProds := doc.ProductTree.Branches[0].ListProducts()

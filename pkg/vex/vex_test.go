@@ -1,12 +1,9 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -248,7 +245,7 @@ func TestCanonicalHash(t *testing.T) {
 		} else {
 			require.NoError(t, err)
 		}
-		require.Equal(t, tc.expected, hashString, fmt.Sprintf("Testcase #%d %s", i, doc.Statements[0].Products[0]))
+		require.Equal(t, tc.expected, hashString, "Testcase #%d %s", i, doc.Statements[0].Products[0])
 	}
 }
 
@@ -305,7 +302,7 @@ func TestPurlMatches(t *testing.T) {
 			true,
 		},
 	} {
-		require.Equal(t, tc.mustMatch, PurlMatches(tc.p1, tc.p2), fmt.Sprintf("failed testcase: %s", caseName))
+		require.Equal(t, tc.mustMatch, PurlMatches(tc.p1, tc.p2), "failed testcase: %s", caseName)
 	}
 }
 
@@ -347,7 +344,7 @@ func TestDocumentMatches(t *testing.T) {
 		matches := tc.sut.Matches(
 			tc.vulnerability, tc.product, tc.subcomponents,
 		)
-		require.Equal(t, tc.numMatches, len(matches), fmt.Sprintf("failed: %s", testCase))
+		require.Len(t, matches, tc.numMatches, "failed: %s", testCase)
 	}
 }
 
@@ -368,6 +365,6 @@ func TestParseContext(t *testing.T) {
 			continue
 		}
 		require.NoError(t, err, tCase)
-		require.Equal(t, res, tc.expected, tCase)
+		require.Equal(t, tc.expected, res, tCase)
 	}
 }

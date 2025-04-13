@@ -1,7 +1,5 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package sarif
 
@@ -19,7 +17,7 @@ type Report struct {
 }
 
 func Open(path string) (*Report, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("opening yaml file: %w", err)
 	}

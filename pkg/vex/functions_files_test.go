@@ -1,12 +1,9 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
 import (
-	"fmt"
 	"os"
 	"sort"
 	"testing"
@@ -35,7 +32,7 @@ func TestParse(t *testing.T) {
 			continue
 		}
 
-		require.NoError(t, err, fmt.Errorf("%s: reading %s", m, tc.path))
+		require.NoError(t, err, "%s: reading %s", m, tc.path)
 		require.NotNil(t, doc, m)
 
 		require.Equal(t, doc.Context, ContextLocator())
@@ -64,8 +61,8 @@ func TestLoadCSAF(t *testing.T) {
 	require.Len(t, vexDoc.Statements, 1)
 	require.Len(t, vexDoc.Statements[0].Products, 1)
 	require.Equal(t, "CVE-2009-4487", string(vexDoc.Statements[0].Vulnerability.Name))
-	require.Equal(t, vexDoc.Statements[0].Status, StatusNotAffected)
-	require.Equal(t, vexDoc.Metadata.ID, "2022-EVD-UC-01-NA-001")
+	require.Equal(t, StatusNotAffected, vexDoc.Statements[0].Status)
+	require.Equal(t, "2022-EVD-UC-01-NA-001", vexDoc.ID)
 }
 
 func TestOpenCSAF(t *testing.T) {

@@ -1,7 +1,5 @@
-/*
-Copyright 2023 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2023 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package vex
 
@@ -14,15 +12,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openvex/go-vex/pkg/csaf"
 	"gopkg.in/yaml.v3"
+
+	"github.com/openvex/go-vex/pkg/csaf"
 )
 
 // Load reads the VEX document file at the given path and returns a decoded VEX
 // object. If Load is unable to read the file or decode the document, it returns
 // an error.
 func Load(path string) (*VEX, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("loading VEX file: %w", err)
 	}
@@ -41,7 +40,7 @@ func Parse(data []byte) (*VEX, error) {
 
 // OpenYAML opens a VEX file in YAML format.
 func OpenYAML(path string) (*VEX, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("opening YAML file: %w", err)
 	}
@@ -54,7 +53,7 @@ func OpenYAML(path string) (*VEX, error) {
 
 // OpenJSON opens an OpenVEX file in JSON format.
 func OpenJSON(path string) (*VEX, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("opening JSON file: %w", err)
 	}
@@ -83,7 +82,7 @@ func parseContext(rawDoc []byte) (string, error) {
 
 // Open tries to autodetect the vex format and open it
 func Open(path string) (*VEX, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
 	}
