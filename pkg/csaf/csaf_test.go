@@ -49,6 +49,20 @@ func TestFindFirstProduct(t *testing.T) {
 	require.Equal(t, "CSAFPID-0001", prod)
 }
 
+func TestFindFirstProductWhenBranchesAreEmpty(t *testing.T) {
+	doc, err := Open("testdata/csaf.json")
+	doc.ProductTree.Branches = []ProductBranch{}
+	require.NoError(t, err)
+	require.NotNil(t, doc)
+
+	prod := doc.ProductTree.FindFirstProduct()
+	require.Empty(t, prod)
+
+	doc.ProductTree.Branches = nil
+	emptyFirstProduct := doc.ProductTree.FindFirstProduct()
+	require.Empty(t, emptyFirstProduct)
+}
+
 func TestFindByHelper(t *testing.T) {
 	doc, err := Open("testdata/csaf.json")
 	require.NoError(t, err)
@@ -71,4 +85,12 @@ func TestListProducts(t *testing.T) {
 	allProds := doc.ProductTree.Branches[0].ListProducts()
 	require.NotNil(t, allProds)
 	require.Len(t, allProds, 3)
+}
+
+func TestAddEmptyProduct(t *testing.T) {
+	product := Product{}
+	list := ProductList{}
+	list.Add(product)
+
+	require.Empty(t, list)
 }

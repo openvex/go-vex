@@ -39,9 +39,6 @@ type CSAF struct {
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321-document-property
 type DocumentMetadata struct {
-	// Aggregate severity is a vehicle that is provided by the document producer to convey the urgency and
-	// criticality with which the one or more vulnerabilities reported should be addressed.
-	//
 	Title      string      `json:"title"`
 	Tracking   Tracking    `json:"tracking"`
 	References []Reference `json:"references"`
@@ -363,7 +360,7 @@ func (branch *ProductBranch) FindProductIdentifier(helperType, helperValue strin
 
 type ProductList []Product
 
-// Add adds a prodocut to the product list if its not there, matching id and
+// Add adds a product to the product list if its not there, matching id and
 // software identifiers.
 func (pl *ProductList) Add(p Product) {
 	if p.ID == "" && len(p.IdentificationHelper) == 0 {
