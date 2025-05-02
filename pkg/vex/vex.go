@@ -413,3 +413,24 @@ func (vexDoc *VEX) StatementsByVulnerability(id string) []Statement {
 	SortStatements(ret, *vexDoc.Timestamp)
 	return ret
 }
+
+// ExtractStatements extracts the statements from the document with the dates
+// inherited from the encapsuling doc to make them stand alone.
+func (vexDoc *VEX) ExtractStatements() []*Statement {
+	ret := []*Statement{}
+
+	// Cycle the VEX statements, copy each and complete the dates
+	for i := range vexDoc.Statements {
+		nstatement := vexDoc.Statements[i].DeepCopy()
+
+		// Carry over the dates from the doc
+		if nstatement.Timestamp == nil {
+			nstatement.Timestamp = vexDoc.Timestamp
+		}
+		if nstatement.LastUpdated == nil {
+			nstatement.LastUpdated = vexDoc.LastUpdated
+		}
+		ret = append(ret, nstatement)
+	}
+	return ret
+}

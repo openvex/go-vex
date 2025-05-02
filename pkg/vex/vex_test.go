@@ -368,3 +368,77 @@ func TestParseContext(t *testing.T) {
 		require.Equal(t, tc.expected, res, tCase)
 	}
 }
+
+func TestExtractStatements(t *testing.T) {
+	t.Parallel()
+	tm1 := time.Now()
+	tm2 := time.Now().Add(1 * time.Hour)
+	tm3 := time.Now().Add(2 * time.Hour)
+	var nilTime *time.Time
+	for _, tc := range []struct {
+		name     string
+		sut      *VEX
+		validate func(*testing.T, []*Statement)
+	}{
+		{
+			"replace-all", &VEX{
+				Metadata:   Metadata{Timestamp: &tm1, LastUpdated: &tm2},
+				Statements: []Statement{{Timestamp: nil, LastUpdated: nil}},
+			},
+			func(t *testing.T, s []*Statement) {
+				t.Helper()
+				require.Equal(t, &tm1, s[0].Timestamp)
+				require.Equal(t, &tm2, s[0].LastUpdated)
+			},
+		},
+		{
+			"replace-ts", &VEX{
+				Metadata:   Metadata{Timestamp: &tm1, LastUpdated: &tm2},
+				Statements: []Statement{{Timestamp: nil, LastUpdated: &tm3}},
+			},
+			func(t *testing.T, s []*Statement) {
+				t.Helper()
+				require.Equal(t, &tm1, s[0].Timestamp)
+				require.Equal(t, &tm3, s[0].LastUpdated)
+			},
+		},
+		{
+			"replace-lu", &VEX{
+				Metadata:   Metadata{Timestamp: &tm1, LastUpdated: &tm2},
+				Statements: []Statement{{Timestamp: &tm3, LastUpdated: nil}},
+			},
+			func(t *testing.T, s []*Statement) {
+				t.Helper()
+				require.Equal(t, &tm3, s[0].Timestamp)
+				require.Equal(t, &tm2, s[0].LastUpdated)
+			},
+		},
+		{
+			"all-nil", &VEX{
+				Metadata:   Metadata{Timestamp: nil, LastUpdated: nil},
+				Statements: []Statement{{Timestamp: nil, LastUpdated: nil}},
+			},
+			func(t *testing.T, s []*Statement) {
+				t.Helper()
+				require.Equal(t, nilTime, s[0].Timestamp)
+				require.Equal(t, nilTime, s[0].LastUpdated)
+			},
+		},
+		{
+			"doc-nil", &VEX{
+				Metadata:   Metadata{Timestamp: nil, LastUpdated: nil},
+				Statements: []Statement{{Timestamp: &tm1, LastUpdated: &tm2}},
+			},
+			func(t *testing.T, s []*Statement) {
+				t.Helper()
+				require.Equal(t, &tm1, s[0].Timestamp)
+				require.Equal(t, &tm2, s[0].LastUpdated)
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			tc.validate(t, tc.sut.ExtractStatements())
+		})
+	}
+}
