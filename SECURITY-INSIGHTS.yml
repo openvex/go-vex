@@ -1,0 +1,45 @@
+# Copyright 2025 The OpenVEX Authors
+# SPDX-License-Identifier: Apache-2.0
+
+---
+header:
+  schema-version: 2.0.0
+
+project:
+  name: OpenVEX Go Module
+  homepage: https://openvex.org
+  steward:
+    uri: https://openssf.org
+  administrators:
+    - name: Adolfo García Veytia
+      affiliation: Carabiner Systems, Inc
+      primary: true
+    - name: Christopher Robinson
+      affiliation: The Linux Foundation
+      primary: true
+  documentation:
+    quickstart-guide: https://github.com/openvex/vexctl
+    detailed-guide: https://github.com/openvex/vexctl
+    code-of-conduct: https://github.com/openvex/community/blob/main/CODE_OF_CONDUCT.md
+  repositories:
+    - name: vexctl
+      url: https://github.com/openvex/vexctl
+    - name: OpenVEX Specification
+      url: https://github.com/openvex/spec
+  vulnerability-reporting:
+    reports-accepted: true
+    contact:
+      name: Adolfo García Veytia
+      primary: true
+
+repository:
+  url: https://github.com/openvex/go-vex
+  status: active
+  documentation:
+    governance: https://github.com/openvex/community/blob/main/GOVERNANCE.md
+  license:
+    expression: Apache-2.0
+  release:
+    changelog: https://example.com/release/{version}#changelog
+    license:
+      expression: Apache-2.0
