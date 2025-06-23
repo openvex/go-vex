@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: Copyright 2025 The SLSA Authors
+# SPDX-License-Identifier: Apache-2.0
+---
+name: SLSA Source
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # Whenever new source is pushed recompute the slsa source information.
+  check-change:
+    permissions:
+      contents: write # needed for storing the vsa in the repo.
+      id-token: write
+    uses: slsa-framework/slsa-source-poc/.github/workflows/compute_slsa_source.yml@main
