@@ -1,0 +1,20 @@
+# Copyright 2023 The OpenVEX Authors
+# SPDX-License-Identifier: Apache-2.0
+
+---
+name: SLSA Source
+on:
+  push:
+    branches: [ "main" ]
+    tags: ['**']
+permissions: {}
+
+jobs:
+  # Whenever new source is pushed recompute the slsa source information.
+  generate-provenance:
+    permissions:
+      contents: write # needed for storing the vsa in the repo.
+      id-token: write # meeded to mint yokens for signing
+    uses: slsa-framework/source-actions/.github/workflows/compute_slsa_source.yml@main
+    with:
+      allow-merge-commits: true
