@@ -120,7 +120,7 @@ jobs:
         id: attest-tests
 
       - name: "Run scanner"
-        uses: google/osv-scanner-action/osv-scanner-action@6c57776178c26313323dcdf6c082ed195314fd17 # v2.2.1
+        uses: google/osv-scanner-action/osv-scanner-action@456ceb78310755116e0a3738121351006286b797 # v2.2.1
         continue-on-error: true
         with:
           scan-args: |-
