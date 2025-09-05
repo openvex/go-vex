@@ -9,6 +9,8 @@ on:
     tags:
       - 'v*'
 
+permissions: {}
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -17,7 +19,32 @@ jobs:
       contents: write # needed to write releases
 
     steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: stable
+          cache: false  
+          check-latest: true
+
+      - name: Install bom
+        uses: kubernetes-sigs/release-actions/setup-bom@a30d93cf2aa029e1e4c8a6c79f766aebf429fddb # v0.3.1
+
+      - name: Set tag output
+        id: tag
+        run: echo "tag_name=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate SBOM
+        shell: bash
+        run: |
+          bom generate --format=json -o /tmp/${{github.event.repository.name}}-${{ steps.tag.outputs.tag_name }}.spdx.json .
+
       - name: Publish Release
         uses: kubernetes-sigs/release-actions/publish-release@a30d93cf2aa029e1e4c8a6c79f766aebf429fddb # v0.3.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          assets: "/tmp/${{github.event.repository.name}}-${{ steps.tag.outputs.tag_name }}.spdx.json"
+          sbom: false
