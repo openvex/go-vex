@@ -221,7 +221,7 @@ func (stmt *Statement) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&struct {
 		*alias
-		TimeZonedTimestamp   string `json:"timestamp"`
+		TimeZonedTimestamp   string `json:"timestamp,omitempty"`
 		TimeZonedLastUpdated string `json:"last_updated,omitempty"`
 	}{
 		alias:                (*alias)(stmt),
