@@ -26,7 +26,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Tejolote
-        uses: kubernetes-sigs/release-actions/setup-tejolote@a30d93cf2aa029e1e4c8a6c79f766aebf429fddb # v0.3.1
+        uses: kubernetes-sigs/release-actions/setup-tejolote@8af7b2a5596dff526de9db59b2c4b8457e9f52a1 # v0.4.0
 
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
