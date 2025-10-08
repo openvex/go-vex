@@ -4,6 +4,7 @@ go 1.24.8
 
 require (
 	github.com/google/go-cmp v0.7.0
+	github.com/in-toto/attestation v1.1.2
 	github.com/in-toto/in-toto-golang v0.9.0
 	github.com/owenrumney/go-sarif v1.1.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -18,6 +19,7 @@ require (
 	github.com/zclconf/go-cty v1.10.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
+	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
 
