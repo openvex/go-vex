@@ -34,22 +34,22 @@ jobs:
           cache: false
 
       - name: Setup bnd
-        uses: carabiner-dev/actions/install/bnd@HEAD
+        uses: carabiner-dev/actions/install/bnd@0ea03c7e668331be3038c6c4449e9131f142d366
 
       - name: Setup snappy
-        uses: carabiner-dev/actions/install/snappy@HEAD
+        uses: carabiner-dev/actions/install/snappy@0ea03c7e668331be3038c6c4449e9131f142d366
 
       - name: Setup unpack
-        uses: carabiner-dev/actions/install/unpack@HEAD
+        uses: carabiner-dev/actions/install/unpack@0ea03c7e668331be3038c6c4449e9131f142d366
 
       - name: Build Scorecard
-        uses: carabiner-dev/actions/_demo/scorecard@HEAD
+        uses: carabiner-dev/actions/_demo/scorecard@0ea03c7e668331be3038c6c4449e9131f142d366
 
       - name: Setup beaker
-        uses: carabiner-dev/actions/install/beaker@HEAD
+        uses: carabiner-dev/actions/install/beaker@0ea03c7e668331be3038c6c4449e9131f142d366
 
       - name: Setup vexflow
-        uses: carabiner-dev/actions/install/vexflow@HEAD
+        uses: carabiner-dev/actions/install/vexflow@0ea03c7e668331be3038c6c4449e9131f142d366
 
       - name: Generate SBOM
         run: |
@@ -145,12 +145,12 @@ jobs:
 
       # Publish attestations to artifacts
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: attestations.jsonl
           path: attestations.jsonl
-
-      - uses: carabiner-dev/actions/ampel/verify@HEAD
+      
+      - uses: carabiner-dev/actions/ampel/verify@0ea03c7e668331be3038c6c4449e9131f142d366
         name: Evaluate Compliance
         id: osps-baseline-check
         with:
