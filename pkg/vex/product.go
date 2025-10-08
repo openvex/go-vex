@@ -3,6 +3,10 @@
 
 package vex
 
+import (
+	intoto "github.com/in-toto/attestation/go/v1"
+)
+
 // Product abstracts the VEX product into a struct that can identify software
 // through various means. The main one is the ID field which contains an IRI
 // identifying the product, possibly pointing to another document with more data,
@@ -76,3 +80,30 @@ const (
 	BLAKE2B512 Algorithm = "blake2b-512"
 	BLAKE3     Algorithm = "blake3"
 )
+
+// ToInToto returns the intoto equivalent string of the algorithm string
+func (algo Algorithm) ToInToto() string {
+	//nolint:exhaustive // Not all VEX algorithms have an intoto equivalent
+	switch algo {
+	case SHA256:
+		return intoto.AlgorithmSHA256.String()
+	case SHA512:
+		return intoto.AlgorithmSHA512.String()
+	case SHA1:
+		return intoto.AlgorithmSHA1.String()
+	case MD5:
+		return intoto.AlgorithmMD5.String()
+	case SHA384:
+		return intoto.AlgorithmSHA384.String()
+	case SHA3224:
+		return intoto.AlgorithmSHA3_224.String()
+	case SHA3256:
+		return intoto.AlgorithmSHA3_256.String()
+	case SHA3384:
+		return intoto.AlgorithmSHA3_384.String()
+	case SHA3512:
+		return intoto.AlgorithmSHA3_512.String()
+	default:
+		return ""
+	}
+}
