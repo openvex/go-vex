@@ -9,11 +9,18 @@ on:
     branches:
       - "main"
   pull_request:
+    branches:
+      - "main"
+
+permissions: {}
 
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -22,9 +29,9 @@ jobs:
 
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
-          cache: true
+          cache: false
 
       - name: build
         run: make pkg
@@ -33,6 +40,9 @@ jobs:
     name: test
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -40,9 +50,9 @@ jobs:
 
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
-          cache: true
+          cache: false
 
       - name: test
         run: make test-cover
