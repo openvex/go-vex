@@ -8,13 +8,18 @@ on:
   pull_request:
     branches:
       - 'main'
-      - 'release-*'
+
+permissions: {}
 
 jobs:
 
   check:
     name: Boilerplate Check
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
     strategy:
       fail-fast: false # Keep running if one leg fails.
       matrix:

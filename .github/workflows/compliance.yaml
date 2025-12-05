@@ -6,6 +6,8 @@ name: OSPS Compliance
 
 on:
   push:
+    branches:
+      - "main"
   workflow_dispatch:
 
 permissions: {}
@@ -18,7 +20,7 @@ jobs:
       id-token: write # needed for keyless signing
       attestations: write # needed to push attestations
       contents: read
-      
+
     steps:
       - name: Check out code
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -30,7 +32,8 @@ jobs:
 
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
-          go-version-file: go.mod
+          go-version: "1.25"
+          check-latest: true
           cache: false
 
       - name: Setup bnd
@@ -58,7 +61,7 @@ jobs:
           unpack extract . --ignore-other-codebases -f spdx > attestations/${{ github.event.repository.name }}-${{ steps.tag.outputs.TAG }}.spdx.json
           bnd statement attestations/spdx.intoto.json --out attestations/spdx.bundle.json
           rm -f attestations/spdx.intoto.json
-     
+
       - name: Attest Security Insights / OpenEoX
         id: attest-si-openeox
         run: |
@@ -73,7 +76,7 @@ jobs:
             bnd statement attestations/mfa.intoto.json --out attestations/mfa.bundle.json
             rm -f attestations/mfa.intoto.json
         id: attest-mfa
-  
+
       - if: github.event.organization.login != ''
         name: Generate org attestation
         env:
@@ -107,7 +110,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           scorecard --repo=carabiner-dev/demo-repo  --format=intoto  > attestations/scorecard.intoto.json
-          bnd statement attestations/scorecard.intoto.json --out attestations/scorecard.bundle.json          
+          bnd statement attestations/scorecard.intoto.json --out attestations/scorecard.bundle.json
           rm -f attestations/scorecard.intoto.json
 
       - name: Attest tests
@@ -133,9 +136,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           vexflow assemble --repo=${{ github.repository }} --triage-repo=${{ github.event.repository.owner.login }}/.vexflow  > attestations/main.openvex.json
-          bnd predicate attestations/main.openvex.json --subject=sha1:${{ github.sha }} --out attestations/openvex.bundle.json --type="https://openvex.dev/ns/v0.2.0"        
-          
-          bnd predicate attestations/osv-results.json --subject=sha1:${{ github.sha }} --out attestations/osv-results.bundle.json --type="https://ossf.github.io/osv-schema/results@v1.6.7"        
+          bnd predicate attestations/main.openvex.json --subject=sha1:${{ github.sha }} --out attestations/openvex.bundle.json --type="https://openvex.dev/ns/v0.2.0"
+
+          bnd predicate attestations/osv-results.json --subject=sha1:${{ github.sha }} --out attestations/osv-results.bundle.json --type="https://ossf.github.io/osv-schema/results@v1.6.7"
           rm -f attestations/osv-results.json attestations/main.openvex.json
 
       - name: Pack Attestations
@@ -149,7 +152,7 @@ jobs:
         with:
           name: attestations.jsonl
           path: attestations.jsonl
-      
+
       - uses: carabiner-dev/actions/ampel/verify@0ea03c7e668331be3038c6c4449e9131f142d366
         name: Evaluate Compliance
         id: osps-baseline-check
