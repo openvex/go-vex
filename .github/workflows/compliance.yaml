@@ -37,22 +37,22 @@ jobs:
           cache: false
 
       - name: Setup bnd
-        uses: carabiner-dev/actions/install/bnd@0ea03c7e668331be3038c6c4449e9131f142d366
+        uses: carabiner-dev/actions/install/bnd@ab7ab0aa6a8bce27f4097e66778d7e9e8dcdf6f3
 
       - name: Setup snappy
-        uses: carabiner-dev/actions/install/snappy@0ea03c7e668331be3038c6c4449e9131f142d366
+        uses: carabiner-dev/actions/install/snappy@ab7ab0aa6a8bce27f4097e66778d7e9e8dcdf6f3
 
       - name: Setup unpack
-        uses: carabiner-dev/actions/install/unpack@0ea03c7e668331be3038c6c4449e9131f142d366
+        uses: carabiner-dev/actions/install/unpack@ab7ab0aa6a8bce27f4097e66778d7e9e8dcdf6f3
 
       - name: Build Scorecard
-        uses: carabiner-dev/actions/_demo/scorecard@0ea03c7e668331be3038c6c4449e9131f142d366
+        uses: carabiner-dev/actions/_demo/scorecard@ab7ab0aa6a8bce27f4097e66778d7e9e8dcdf6f3
 
       - name: Setup beaker
-        uses: carabiner-dev/actions/install/beaker@0ea03c7e668331be3038c6c4449e9131f142d366
+        uses: carabiner-dev/actions/install/beaker@ab7ab0aa6a8bce27f4097e66778d7e9e8dcdf6f3
 
       - name: Setup vexflow
-        uses: carabiner-dev/actions/install/vexflow@0ea03c7e668331be3038c6c4449e9131f142d366
+        uses: carabiner-dev/actions/install/vexflow@ab7ab0aa6a8bce27f4097e66778d7e9e8dcdf6f3
 
       - name: Generate SBOM
         run: |
@@ -153,7 +153,7 @@ jobs:
           name: attestations.jsonl
           path: attestations.jsonl
 
-      - uses: carabiner-dev/actions/ampel/verify@0ea03c7e668331be3038c6c4449e9131f142d366
+      - uses: carabiner-dev/actions/ampel/verify@ab7ab0aa6a8bce27f4097e66778d7e9e8dcdf6f3
         name: Evaluate Compliance
         id: osps-baseline-check
         with:
