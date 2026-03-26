@@ -8,6 +8,7 @@ package vex
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -217,6 +218,10 @@ func (vexDoc *VEX) Matches(vulnID, product string, subcomponents []string) []Sta
 // will not alter the hash.
 func (vexDoc *VEX) CanonicalHash() (string, error) {
 	// Here's the algo:
+
+	if vexDoc.Timestamp == nil {
+		return "", errors.New("document timestamp is required to compute canonical hash")
+	}
 
 	// 1. Start with the document date. In unixtime to avoid format variance.
 	cString := fmt.Sprintf("%d", vexDoc.Timestamp.Unix())

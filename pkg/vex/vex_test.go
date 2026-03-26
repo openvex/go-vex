@@ -236,6 +236,14 @@ func TestCanonicalHash(t *testing.T) {
 			goldenHash,
 			false,
 		},
+		// Nil document timestamp should return an error
+		{
+			func(v *VEX) {
+				v.Timestamp = nil
+			},
+			"",
+			true,
+		},
 	} {
 		doc := genTestDoc(t)
 		tc.prepare(&doc)
