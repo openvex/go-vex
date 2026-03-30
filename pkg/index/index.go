@@ -26,7 +26,7 @@ type constructorFunc func(*StatementIndex) error
 // WithDocument adds all the statements in a document to the index
 func WithDocument(doc *vex.VEX) constructorFunc {
 	return func(si *StatementIndex) error {
-		statements := []*vex.Statement{}
+		statements := make([]*vex.Statement, 0, len(doc.Statements))
 		for i := range doc.Statements {
 			statements = append(statements, &doc.Statements[i])
 		}
@@ -163,7 +163,7 @@ func unionIndexResults(results []map[*vex.Statement]struct{}) []*vex.Statement {
 
 // Matches applies filters to the index to look for matching statements
 func (si *StatementIndex) Matches(filterfunc ...FilterFunc) []*vex.Statement {
-	lists := []map[*vex.Statement]struct{}{}
+	lists := make([]map[*vex.Statement]struct{}, 0, len(filterfunc))
 	for _, ffunc := range filterfunc {
 		filter := ffunc(si)
 		lists = append(lists, filter())

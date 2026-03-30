@@ -294,7 +294,7 @@ func cstringFromComponent(c Component) string {
 // vulnerability data or the statement.
 func cstringFromVulnerability(v Vulnerability) string {
 	cString := fmt.Sprintf(":%s:%s", v.ID, v.Name)
-	list := []string{}
+	list := make([]string, 0, len(v.Aliases))
 	for i := range v.Aliases {
 		list = append(list, string(v.Aliases[i]))
 	}
@@ -422,7 +422,7 @@ func (vexDoc *VEX) StatementsByVulnerability(id string) []Statement {
 // ExtractStatements extracts the statements from the document with the dates
 // inherited from the encapsuling doc to make them stand alone.
 func (vexDoc *VEX) ExtractStatements() []*Statement {
-	ret := []*Statement{}
+	ret := make([]*Statement, 0, len(vexDoc.Statements))
 
 	// Cycle the VEX statements, copy each and complete the dates
 	for i := range vexDoc.Statements {

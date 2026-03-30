@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 		require.Equal(t, doc.Context, ContextLocator())
 		require.Len(t, doc.Statements, 5)
 
-		vulns := []string{}
+		vulns := make([]string, 0, len(doc.Statements))
 		for _, s := range doc.Statements {
 			vulns = append(vulns, string(s.Vulnerability.Name))
 			require.Equal(t, tc.product, s.Products[0].ID)
