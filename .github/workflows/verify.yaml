@@ -13,9 +13,29 @@ on:
 permissions: {}
 
 jobs:
+  resolve-versions:
+    name: resolve go versions
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    outputs:
+      GO_MINOR_VERSION_STABLE: ${{ steps.versions.outputs.GO_MINOR_VERSION_STABLE }}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Resolve Go versions
+        id: versions
+        uses: carabiner-dev/actions/go/versions@486750c75e9c3900944193c0c2d7956a840acf2a
+
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
+    needs: resolve-versions
 
     permissions:
       contents: read
@@ -27,7 +47,7 @@ jobs:
 
       - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: "1.26"
+          go-version: ${{ needs.resolve-versions.outputs.GO_MINOR_VERSION_STABLE }}
           check-latest: true
           cache: false
 
