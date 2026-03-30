@@ -1,7 +1,5 @@
-/*
-Copyright 2026 The OpenVEX Authors
-SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright 2026 The OpenVEX Authors
+// SPDX-License-Identifier: Apache-2.0
 
 package attestation
 
