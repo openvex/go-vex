@@ -30,7 +30,7 @@ jobs:
 
       - name: Resolve Go versions
         id: versions
-        uses: carabiner-dev/actions/go/versions@486750c75e9c3900944193c0c2d7956a840acf2a
+        uses: carabiner-dev/actions/go/versions@ba6f58b7120233bc312a76fb6bf3397704bcdcef
 
   golangci:
     name: golangci-lint
@@ -45,7 +45,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
           go-version: ${{ needs.resolve-versions.outputs.GO_MINOR_VERSION_STABLE }}
           check-latest: true
