@@ -11,6 +11,8 @@ import (
 	cattestation "github.com/carabiner-dev/attestation"
 	intoto "github.com/in-toto/attestation/go/v1"
 	"google.golang.org/protobuf/encoding/protojson"
+
+	"github.com/openvex/go-vex/pkg/vex"
 )
 
 var _ cattestation.Statement = (*Attestation)(nil)
@@ -27,14 +29,29 @@ type Attestation struct {
 	Predicate *Predicate `json:"predicate"`
 }
 
-func New() *Attestation {
-	return &Attestation{
+// Option configures an Attestation built with New.
+type Option func(*Attestation)
+
+// WithPredicate builds a Predicate from doc and sets it on the attestation.
+// If doc is nil, a default empty VEX document is used.
+func WithPredicate(doc *vex.VEX) Option {
+	return func(a *Attestation) {
+		a.Predicate = NewPredicate(doc)
+	}
+}
+
+func New(opts ...Option) *Attestation {
+	att := &Attestation{
 		Statement: &intoto.Statement{
 			Type:          intoto.StatementTypeUri,
 			PredicateType: string(PredicateType),
 		},
 		Predicate: NewPredicate(nil),
 	}
+	for _, opt := range opts {
+		opt(att)
+	}
+	return att
 }
 
 // MarshalJSON implements custom JSON marshaling for Attestation. It uses

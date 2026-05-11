@@ -265,6 +265,40 @@ func TestAttestationMultipleSubjects(t *testing.T) {
 	require.Len(t, subjects, 2)
 }
 
+func TestNewWithPredicate(t *testing.T) {
+	doc := newTestVEX()
+	att := New(WithPredicate(&doc))
+
+	require.NotNil(t, att.Predicate)
+	require.Equal(t, doc.ID, att.Predicate.ID)
+	require.Equal(t, doc.Author, att.Predicate.Author)
+	require.Len(t, att.Predicate.Statements, 1)
+	require.EqualValues(t, "CVE-2024-1234", att.Predicate.Statements[0].Vulnerability.Name)
+
+	// The intoto envelope must still be populated
+	require.Equal(t, intoto.StatementTypeUri, att.GetType())
+	require.Equal(t, string(PredicateType), att.Statement.GetPredicateType())
+
+	// And the document must round-trip through the marshaled attestation
+	data, err := json.Marshal(att)
+	require.NoError(t, err)
+	var envelope map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(data, &envelope))
+	var predicate map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(envelope["predicate"], &predicate))
+	var author string
+	require.NoError(t, json.Unmarshal(predicate["author"], &author))
+	require.Equal(t, "mailto:test@example.com", author)
+}
+
+func TestNewWithPredicateNil(t *testing.T) {
+	// WithPredicate(nil) should fall back to a default VEX document,
+	// matching the behavior of New() with no options.
+	att := New(WithPredicate(nil))
+	require.NotNil(t, att.Predicate)
+	require.Contains(t, att.Predicate.Context, "openvex.dev")
+}
+
 func TestAddSubjects(t *testing.T) {
 	att := New()
 
