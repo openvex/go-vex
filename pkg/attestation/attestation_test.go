@@ -291,6 +291,56 @@ func TestNewWithPredicate(t *testing.T) {
 	require.Equal(t, "mailto:test@example.com", author)
 }
 
+func TestNewWithSubjects(t *testing.T) {
+	s1 := &intoto.ResourceDescriptor{
+		Name:   "pkg:oci/app@sha256:aaa",
+		Digest: map[string]string{"sha256": "aaa"},
+	}
+	s2 := &intoto.ResourceDescriptor{
+		Name:   "pkg:oci/app@sha256:bbb",
+		Digest: map[string]string{"sha256": "bbb"},
+	}
+	s3 := &intoto.ResourceDescriptor{
+		Name:   "pkg:oci/app@sha256:ccc",
+		Digest: map[string]string{"sha256": "ccc"},
+	}
+
+	// Variadic in a single call plus a second WithSubjects call must accumulate.
+	att := New(
+		WithSubjects(s1, s2),
+		WithSubjects(s3),
+	)
+	require.Len(t, att.Subject, 3)
+	require.Equal(t, s1, att.Subject[0])
+	require.Equal(t, s2, att.Subject[1])
+	require.Equal(t, s3, att.Subject[2])
+}
+
+func TestNewWithPredicateAndSubjects(t *testing.T) {
+	doc := newTestVEX()
+	att := New(
+		WithPredicate(&doc),
+		WithSubjects(&intoto.ResourceDescriptor{
+			Name:   "pkg:oci/nginx@sha256:abc123",
+			Digest: map[string]string{"sha256": "abc123def456"},
+		}),
+	)
+
+	data, err := json.Marshal(att)
+	require.NoError(t, err)
+
+	var envelope map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(data, &envelope))
+
+	var subjects []map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(envelope["subject"], &subjects))
+	require.Len(t, subjects, 1)
+
+	var predicate map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(envelope["predicate"], &predicate))
+	require.Contains(t, predicate, "statements")
+}
+
 func TestNewWithPredicateNil(t *testing.T) {
 	// WithPredicate(nil) should fall back to a default VEX document,
 	// matching the behavior of New() with no options.

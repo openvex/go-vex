@@ -40,6 +40,16 @@ func WithPredicate(doc *vex.VEX) Option {
 	}
 }
 
+// WithSubjects appends the given resource descriptors to the attestation's
+// subject list. It is repeatable: multiple WithSubjects options accumulate.
+// Unlike AddSubjects, this option does not validate that each subject has a
+// digest — call AddSubjects after construction if you need that check.
+func WithSubjects(subs ...*intoto.ResourceDescriptor) Option {
+	return func(a *Attestation) {
+		a.Subject = append(a.Subject, subs...)
+	}
+}
+
 func New(opts ...Option) *Attestation {
 	att := &Attestation{
 		Statement: &intoto.Statement{
