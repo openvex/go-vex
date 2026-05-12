@@ -6,6 +6,7 @@ package attestation
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -263,6 +264,115 @@ func TestAttestationMultipleSubjects(t *testing.T) {
 	var subjects []map[string]json.RawMessage
 	require.NoError(t, json.Unmarshal(envelope["subject"], &subjects))
 	require.Len(t, subjects, 2)
+}
+
+func TestNewWithPredicate(t *testing.T) {
+	doc := newTestVEX()
+	att := New(WithPredicate(&doc))
+
+	require.NotNil(t, att.Predicate)
+	require.Equal(t, doc.ID, att.Predicate.ID)
+	require.Equal(t, doc.Author, att.Predicate.Author)
+	require.Len(t, att.Predicate.Statements, 1)
+	require.EqualValues(t, "CVE-2024-1234", att.Predicate.Statements[0].Vulnerability.Name)
+
+	// The intoto envelope must still be populated
+	require.Equal(t, intoto.StatementTypeUri, att.GetType())
+	require.Equal(t, string(PredicateType), att.Statement.GetPredicateType())
+
+	// And the document must round-trip through the marshaled attestation
+	data, err := json.Marshal(att)
+	require.NoError(t, err)
+	var envelope map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(data, &envelope))
+	var predicate map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(envelope["predicate"], &predicate))
+	var author string
+	require.NoError(t, json.Unmarshal(predicate["author"], &author))
+	require.Equal(t, "mailto:test@example.com", author)
+}
+
+func TestNewWithSubjects(t *testing.T) {
+	s1 := &intoto.ResourceDescriptor{
+		Name:   "pkg:oci/app@sha256:aaa",
+		Digest: map[string]string{"sha256": "aaa"},
+	}
+	s2 := &intoto.ResourceDescriptor{
+		Name:   "pkg:oci/app@sha256:bbb",
+		Digest: map[string]string{"sha256": "bbb"},
+	}
+	s3 := &intoto.ResourceDescriptor{
+		Name:   "pkg:oci/app@sha256:ccc",
+		Digest: map[string]string{"sha256": "ccc"},
+	}
+
+	// Variadic in a single call plus a second WithSubjects call must accumulate.
+	att := New(
+		WithSubjects(s1, s2),
+		WithSubjects(s3),
+	)
+	require.Len(t, att.Subject, 3)
+	require.Equal(t, s1, att.Subject[0])
+	require.Equal(t, s2, att.Subject[1])
+	require.Equal(t, s3, att.Subject[2])
+}
+
+func TestNewWithPredicateAndSubjects(t *testing.T) {
+	doc := newTestVEX()
+	att := New(
+		WithPredicate(&doc),
+		WithSubjects(&intoto.ResourceDescriptor{
+			Name:   "pkg:oci/nginx@sha256:abc123",
+			Digest: map[string]string{"sha256": "abc123def456"},
+		}),
+		WithImportProducts(false),
+	)
+
+	data, err := json.Marshal(att)
+	require.NoError(t, err)
+
+	var envelope map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(data, &envelope))
+
+	var subjects []map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(envelope["subject"], &subjects))
+	require.Len(t, subjects, 1)
+
+	var predicate map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(envelope["predicate"], &predicate))
+	require.Contains(t, predicate, "statements")
+}
+
+func TestNewWithPredicateNil(t *testing.T) {
+	// WithPredicate(nil) should fall back to a default VEX document,
+	// matching the behavior of New() with no options.
+	att := New(WithPredicate(nil))
+	require.NotNil(t, att.Predicate)
+	require.Contains(t, att.Predicate.Context, "openvex.dev")
+}
+
+// faultyOption is a test helper that returns the given error when applied.
+func faultyOption(err error) Option {
+	return func(*buildOpts) error { return err }
+}
+
+func TestNewWithErrorPropagatesOptionError(t *testing.T) {
+	want := errors.New("option blew up")
+	att, err := NewWithError(faultyOption(want))
+	require.ErrorIs(t, err, want)
+	require.Nil(t, att, "no attestation should be returned when an option fails strictly")
+}
+
+func TestNewSwallowsOptionErrorsAndContinues(t *testing.T) {
+	// An erroring option must not prevent later options from being applied.
+	doc := newTestVEX()
+	att := New(
+		faultyOption(errors.New("boom")),
+		WithPredicate(&doc),
+		WithImportProducts(false),
+	)
+	require.NotNil(t, att)
+	require.Equal(t, doc.ID, att.Predicate.ID, "WithPredicate after a failing option must still apply")
 }
 
 func TestAddSubjects(t *testing.T) {
