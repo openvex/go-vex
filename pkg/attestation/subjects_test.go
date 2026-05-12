@@ -14,12 +14,14 @@ import (
 	"github.com/openvex/go-vex/pkg/vex"
 )
 
-// stubDigestResolver replaces resolveOCIDigest for the duration of a test.
-func stubDigestResolver(t *testing.T, fn func(string) (string, error)) {
+// failResolver returns an ImageDigestResolver that fails the test if called.
+// Use it when the test expects no digest lookups.
+func failResolver(t *testing.T) ImageDigestResolver {
 	t.Helper()
-	prev := resolveOCIDigest
-	resolveOCIDigest = fn
-	t.Cleanup(func() { resolveOCIDigest = prev })
+	return ImageDigestResolver(func(string) (string, error) {
+		t.Fatalf("ImageDigestResolver should not be called")
+		return "", nil
+	})
 }
 
 func vexWithProducts(prods ...vex.Product) vex.VEX {
@@ -45,15 +47,11 @@ func vexWithProducts(prods ...vex.Product) vex.VEX {
 }
 
 func TestImportOCIPurlWithEmbeddedDigest(t *testing.T) {
-	// Resolver must NOT be called when the purl already carries a digest.
-	stubDigestResolver(t, func(string) (string, error) {
-		t.Fatalf("resolveOCIDigest should not be called when purl has a digest")
-		return "", nil
-	})
-
 	purl := "pkg:oci/nginx@sha256:abc123def456"
 	doc := vexWithProducts(vex.Product{Component: vex.Component{ID: purl}})
-	att := New(WithPredicate(&doc))
+
+	// No resolver passed: the embedded digest means none is needed.
+	att := New(WithPredicate(&doc), WithImageDigestResolver(failResolver(t)))
 
 	require.Len(t, att.Subject, 1)
 	s := att.Subject[0]
@@ -64,14 +62,14 @@ func TestImportOCIPurlWithEmbeddedDigest(t *testing.T) {
 
 func TestImportOCIPurlWithRepositoryURLAndTag(t *testing.T) {
 	// No digest in purl: resolver fills it in.
-	stubDigestResolver(t, func(ref string) (string, error) {
+	resolver := ImageDigestResolver(func(ref string) (string, error) {
 		require.Equal(t, "ghcr.io/myorg/app:1.2.3", ref)
 		return "sha256:cafebabe", nil
 	})
 
 	purl := "pkg:oci/app?repository_url=ghcr.io/myorg/app&tag=1.2.3"
 	doc := vexWithProducts(vex.Product{Component: vex.Component{ID: purl}})
-	att := New(WithPredicate(&doc))
+	att := New(WithPredicate(&doc), WithImageDigestResolver(resolver))
 
 	require.Len(t, att.Subject, 1)
 	s := att.Subject[0]
@@ -81,12 +79,6 @@ func TestImportOCIPurlWithRepositoryURLAndTag(t *testing.T) {
 }
 
 func TestImportOCIPurlFromIdentifiers(t *testing.T) {
-	// OCI purl lives in Identifiers; main ID is a generic IRI.
-	stubDigestResolver(t, func(string) (string, error) {
-		t.Fatalf("resolveOCIDigest should not be called when purl has a digest")
-		return "", nil
-	})
-
 	ociPurl := "pkg:oci/nginx@sha256:abc123"
 	doc := vexWithProducts(vex.Product{
 		Component: vex.Component{
@@ -97,7 +89,7 @@ func TestImportOCIPurlFromIdentifiers(t *testing.T) {
 		},
 	})
 
-	att := New(WithPredicate(&doc))
+	att := New(WithPredicate(&doc), WithImageDigestResolver(failResolver(t)))
 	require.Len(t, att.Subject, 1)
 	s := att.Subject[0]
 	require.Equal(t, ociPurl, s.GetUri())
@@ -105,12 +97,6 @@ func TestImportOCIPurlFromIdentifiers(t *testing.T) {
 }
 
 func TestImportOCIPurlIdentifiersPreferredOverID(t *testing.T) {
-	// Both ID and Identifiers[PURL] hold OCI purls; identifiers wins.
-	stubDigestResolver(t, func(string) (string, error) {
-		t.Fatalf("resolveOCIDigest should not be called when purl has a digest")
-		return "", nil
-	})
-
 	idPurl := "pkg:oci/old@sha256:111"
 	identPurl := "pkg:oci/new@sha256:222"
 	doc := vexWithProducts(vex.Product{
@@ -122,18 +108,12 @@ func TestImportOCIPurlIdentifiersPreferredOverID(t *testing.T) {
 		},
 	})
 
-	att := New(WithPredicate(&doc))
+	att := New(WithPredicate(&doc), WithImageDigestResolver(failResolver(t)))
 	require.Len(t, att.Subject, 1)
 	require.Equal(t, identPurl, att.Subject[0].GetUri(), "Identifiers[PURL] must take precedence over ID")
 }
 
 func TestImportOCIPurlFallsBackToIDWhenIdentifierNotOCI(t *testing.T) {
-	// Identifiers[PURL] is non-OCI; ID is OCI — fall back to ID.
-	stubDigestResolver(t, func(string) (string, error) {
-		t.Fatalf("resolveOCIDigest should not be called when purl has a digest")
-		return "", nil
-	})
-
 	doc := vexWithProducts(vex.Product{
 		Component: vex.Component{
 			ID: "pkg:oci/app@sha256:abc",
@@ -143,7 +123,7 @@ func TestImportOCIPurlFallsBackToIDWhenIdentifierNotOCI(t *testing.T) {
 		},
 	})
 
-	att := New(WithPredicate(&doc))
+	att := New(WithPredicate(&doc), WithImageDigestResolver(failResolver(t)))
 	require.Len(t, att.Subject, 1)
 	require.Equal(t, "pkg:oci/app@sha256:abc", att.Subject[0].GetUri())
 }
@@ -159,6 +139,7 @@ func TestImportNonOCIWithHashes(t *testing.T) {
 		},
 	})
 
+	// Non-OCI: resolver is not consulted.
 	att := New(WithPredicate(&doc))
 	require.Len(t, att.Subject, 1)
 	s := att.Subject[0]
@@ -188,26 +169,24 @@ func TestImportDropsUnmappableAlgorithm(t *testing.T) {
 }
 
 func TestImportDefaultsOn(t *testing.T) {
-	stubDigestResolver(t, func(string) (string, error) {
-		return "sha256:aaa", nil
-	})
+	resolver := ImageDigestResolver(func(string) (string, error) { return "sha256:aaa", nil })
 	doc := vexWithProducts(vex.Product{
 		Component: vex.Component{ID: "pkg:oci/app"},
 	})
 	// No WithImportProducts option — default should import.
-	att := New(WithPredicate(&doc))
+	att := New(WithPredicate(&doc), WithImageDigestResolver(resolver))
 	require.Len(t, att.Subject, 1)
 }
 
 func TestImportDisabled(t *testing.T) {
-	stubDigestResolver(t, func(string) (string, error) {
-		t.Fatalf("resolver must not be called when import is disabled")
-		return "", nil
-	})
 	doc := vexWithProducts(vex.Product{
 		Component: vex.Component{ID: "pkg:oci/nginx@sha256:abc"},
 	})
-	att := New(WithPredicate(&doc), WithImportProducts(false))
+	att := New(
+		WithPredicate(&doc),
+		WithImportProducts(false),
+		WithImageDigestResolver(failResolver(t)),
+	)
 	require.Empty(t, att.Subject)
 }
 
@@ -240,24 +219,21 @@ func TestImportDedupesAcrossStatements(t *testing.T) {
 }
 
 func TestNewWithErrorPropagatesResolverFailure(t *testing.T) {
-	stubDigestResolver(t, func(string) (string, error) {
+	resolver := ImageDigestResolver(func(string) (string, error) {
 		return "", errors.New("registry unreachable")
 	})
 	doc := vexWithProducts(vex.Product{
 		Component: vex.Component{ID: "pkg:oci/app"},
 	})
 
-	att, err := NewWithError(WithPredicate(&doc))
+	att, err := NewWithError(WithPredicate(&doc), WithImageDigestResolver(resolver))
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "registry unreachable")
-	// The attestation is still returned (partial state OK)
 	require.NotNil(t, att)
 }
 
 func TestNewBestEffortSkipsOnResolverFailure(t *testing.T) {
-	calls := 0
-	stubDigestResolver(t, func(ref string) (string, error) {
-		calls++
+	resolver := ImageDigestResolver(func(ref string) (string, error) {
 		if ref == "broken" {
 			return "", errors.New("boom")
 		}
@@ -285,16 +261,14 @@ func TestNewBestEffortSkipsOnResolverFailure(t *testing.T) {
 		}},
 	}
 
-	att := New(WithPredicate(&doc))
+	att := New(WithPredicate(&doc), WithImageDigestResolver(resolver))
 	// Broken one is skipped; the good one (with embedded digest) survives.
 	require.Len(t, att.Subject, 1)
 	require.Equal(t, "good@sha256:abc", att.Subject[0].GetName())
 }
 
 func TestImportPreservesExplicitSubjects(t *testing.T) {
-	stubDigestResolver(t, func(string) (string, error) {
-		return "sha256:imported", nil
-	})
+	resolver := ImageDigestResolver(func(string) (string, error) { return "sha256:imported", nil })
 	doc := vexWithProducts(vex.Product{
 		Component: vex.Component{ID: "pkg:oci/app"},
 	})
@@ -303,8 +277,36 @@ func TestImportPreservesExplicitSubjects(t *testing.T) {
 		Name:   "manually-added",
 		Digest: map[string]string{"sha256": "manual"},
 	}
-	att := New(WithPredicate(&doc), WithSubjects(explicit))
+	att := New(
+		WithPredicate(&doc),
+		WithSubjects(explicit),
+		WithImageDigestResolver(resolver),
+	)
 	require.Len(t, att.Subject, 2, "explicit subjects must coexist with imported ones")
 	require.Equal(t, "manually-added", att.Subject[0].GetName())
 	require.Equal(t, "app", att.Subject[1].GetName())
+}
+
+func TestImportNoResolverNoDigestStrictErrors(t *testing.T) {
+	// OCI purl without an embedded digest and no resolver configured:
+	// NewWithError must surface errNoResolver.
+	doc := vexWithProducts(vex.Product{
+		Component: vex.Component{ID: "pkg:oci/app"},
+	})
+
+	att, err := NewWithError(WithPredicate(&doc))
+	require.ErrorIs(t, err, errNoResolver)
+	require.NotNil(t, att)
+}
+
+func TestImportNoResolverNoDigestBestEffortSkips(t *testing.T) {
+	// Best-effort New must skip the unresolvable product rather than error.
+	doc := vexWithProducts(
+		vex.Product{Component: vex.Component{ID: "pkg:oci/app"}},
+		vex.Product{Component: vex.Component{ID: "pkg:oci/good@sha256:abc"}},
+	)
+
+	att := New(WithPredicate(&doc))
+	require.Len(t, att.Subject, 1, "unresolvable purl is skipped; the one with an embedded digest is kept")
+	require.Equal(t, "good@sha256:abc", att.Subject[0].GetName())
 }

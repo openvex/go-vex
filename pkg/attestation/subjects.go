@@ -4,28 +4,33 @@
 package attestation
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"strings"
 
-	"github.com/google/go-containerregistry/pkg/crane"
 	intoto "github.com/in-toto/attestation/go/v1"
 	purl "github.com/package-url/packageurl-go"
 
 	"github.com/openvex/go-vex/pkg/vex"
 )
 
-// resolveOCIDigest looks up the manifest digest of an image reference.
-// It is a package-level variable so tests can stub registry I/O.
-var resolveOCIDigest = func(ref string) (string, error) {
-	return crane.Digest(ref)
-}
+// ImageDigestResolver resolves an OCI image reference to its registry
+// digest in the canonical "<algo>:<hex>" form (e.g. "sha256:abc..."). It
+// abstracts the registry round-trip: callers wire in their own client
+// (crane, docker, go-containerregistry, an in-memory map for tests, etc.)
+// instead of go-vex pulling in a registry dependency.
+type ImageDigestResolver func(ref string) (string, error)
+
+// errNoResolver is returned when an OCI purl carries no digest and no
+// ImageDigestResolver was configured via WithImageDigestResolver.
+var errNoResolver = errors.New("OCI purl has no digest and no ImageDigestResolver is configured")
 
 // importProductsStrict walks every product in doc and appends a corresponding
 // in-toto subject to att, aborting on the first per-product failure.
-func importProductsStrict(att *Attestation, doc *vex.VEX) error {
+func importProductsStrict(att *Attestation, doc *vex.VEX, resolver ImageDigestResolver) error {
 	var firstErr error
-	walkProductsForImport(att, doc, func(err error) bool {
+	walkProductsForImport(att, doc, resolver, func(err error) bool {
 		firstErr = err
 		return false
 	})
@@ -34,8 +39,8 @@ func importProductsStrict(att *Attestation, doc *vex.VEX) error {
 
 // importProductsBestEffort is the lenient counterpart to importProductsStrict:
 // failures resolving individual products are logged via slog and skipped.
-func importProductsBestEffort(att *Attestation, doc *vex.VEX) {
-	walkProductsForImport(att, doc, func(err error) bool {
+func importProductsBestEffort(att *Attestation, doc *vex.VEX, resolver ImageDigestResolver) {
+	walkProductsForImport(att, doc, resolver, func(err error) bool {
 		slog.Warn("skipping product in attestation subjects", "error", err.Error())
 		return true
 	})
@@ -47,14 +52,16 @@ func importProductsBestEffort(att *Attestation, doc *vex.VEX) {
 //   - For OCI purls (pkg:oci/... or pkg:/oci/...), the original purl is
 //     recorded in the resource descriptor's Uri field, the derived image
 //     reference goes in Name, and the digest goes in Digest. If the purl
-//     does not carry a digest, it is fetched via crane.Digest.
+//     does not carry a digest, it is fetched via resolver. If resolver is
+//     nil and the purl has no embedded digest, the product is reported as
+//     an error.
 //   - All other products are imported only if they carry at least one hash
 //     whose algorithm has an in-toto equivalent; algorithm names are mapped
 //     via vex.Algorithm.ToInToto.
 //
 // onError is invoked for each per-product failure; if it returns false,
 // iteration stops.
-func walkProductsForImport(att *Attestation, doc *vex.VEX, onError func(error) bool) {
+func walkProductsForImport(att *Attestation, doc *vex.VEX, resolver ImageDigestResolver, onError func(error) bool) {
 	if doc == nil {
 		return
 	}
@@ -63,7 +70,7 @@ func walkProductsForImport(att *Attestation, doc *vex.VEX, onError func(error) b
 	for i := range doc.Statements {
 		for j := range doc.Statements[i].Products {
 			p := &doc.Statements[i].Products[j]
-			sub, key, err := productToSubject(p)
+			sub, key, err := productToSubject(p, resolver)
 			if err != nil {
 				if !onError(err) {
 					return
@@ -85,13 +92,9 @@ func walkProductsForImport(att *Attestation, doc *vex.VEX, onError func(error) b
 // productToSubject converts a VEX product into an in-toto resource
 // descriptor. Returns (nil, "", nil) when the product is not attestable
 // (e.g., non-OCI product without hashes).
-//
-// OCI purl detection prefers a PURL entry in the product's identifiers
-// over the product's main ID — the identifiers map is the canonical home
-// for software identifiers, with the main ID often being a generic IRI.
-func productToSubject(p *vex.Product) (*intoto.ResourceDescriptor, string, error) {
+func productToSubject(p *vex.Product, resolver ImageDigestResolver) (*intoto.ResourceDescriptor, string, error) {
 	if ociPurl := findOCIPurl(p); ociPurl != "" {
-		sub, err := ociPurlToSubject(ociPurl)
+		sub, err := ociPurlToSubject(ociPurl, resolver)
 		if err != nil {
 			return nil, "", err
 		}
@@ -153,8 +156,9 @@ func isOCIPurl(id string) bool {
 // ociPurlToSubject parses an OCI purl and returns a resource descriptor
 // with Uri set to the original purl, Name set to the derived image
 // reference, and Digest set to the resolved digest. If the purl does not
-// carry a digest, it is looked up via crane.Digest.
-func ociPurlToSubject(original string) (*intoto.ResourceDescriptor, error) {
+// carry a digest, it is looked up via resolver; if resolver is nil, an
+// error wrapping errNoResolver is returned.
+func ociPurlToSubject(original string, resolver ImageDigestResolver) (*intoto.ResourceDescriptor, error) {
 	p, err := purl.FromString(original)
 	if err != nil {
 		return nil, fmt.Errorf("parsing OCI purl %q: %w", original, err)
@@ -179,13 +183,16 @@ func ociPurlToSubject(original string) (*intoto.ResourceDescriptor, error) {
 	}
 
 	if hexDigest == "" {
-		looked, err := resolveOCIDigest(ref)
+		if resolver == nil {
+			return nil, fmt.Errorf("%w: %s", errNoResolver, original)
+		}
+		looked, err := resolver(ref)
 		if err != nil {
 			return nil, fmt.Errorf("resolving digest for %s: %w", ref, err)
 		}
 		parts := strings.SplitN(looked, ":", 2)
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("unexpected digest format %q from registry", looked)
+			return nil, fmt.Errorf("unexpected digest format %q from resolver", looked)
 		}
 		algo, hexDigest = parts[0], parts[1]
 	}

@@ -33,8 +33,8 @@ type Attestation struct {
 // Option configures an Attestation built with New or NewWithError. An
 // Option may return an error if its configuration cannot be applied (for
 // example, an option that resolves an image reference may fail to reach
-// the registry). New logs and continues past such errors; NewWithError
-// returns the first one.
+// the registry). To avoid breaking changes, on error New() just logs and
+// continues past such errors while NewWithError returns the first one.
 type Option func(*buildOpts) error
 
 // buildOpts holds the transient state accumulated by Options during
@@ -43,6 +43,7 @@ type buildOpts struct {
 	predicate      *Predicate
 	subjects       []*intoto.ResourceDescriptor
 	importProducts bool
+	resolver       ImageDigestResolver
 }
 
 // WithPredicate builds a Predicate from doc and sets it on the attestation.
@@ -73,6 +74,21 @@ func WithSubjects(subs ...*intoto.ResourceDescriptor) Option {
 func WithImportProducts(b bool) Option {
 	return func(o *buildOpts) error {
 		o.importProducts = b
+		return nil
+	}
+}
+
+// WithImageDigestResolver supplies the resolver used to look up the digest
+// of an OCI image reference when an OCI purl in the predicate carries no
+// digest of its own. Without a resolver, such purls cause the import to
+// fail (or be skipped, in best-effort mode).
+//
+// Callers wire in their own registry client (e.g. crane, go-containerregistry,
+// docker, or an in-memory map for tests) — go-vex stays free of registry
+// dependencies.
+func WithImageDigestResolver(r ImageDigestResolver) Option {
+	return func(o *buildOpts) error {
+		o.resolver = r
 		return nil
 	}
 }
@@ -116,7 +132,7 @@ func New(opts ...Option) *Attestation {
 	})
 	att := bo.build()
 	if bo.importProducts {
-		importProductsBestEffort(att, &att.Predicate.VEX)
+		importProductsBestEffort(att, &att.Predicate.VEX, bo.resolver)
 	}
 	return att
 }
@@ -134,7 +150,7 @@ func NewWithError(opts ...Option) (*Attestation, error) {
 	}
 	att := bo.build()
 	if bo.importProducts {
-		if err := importProductsStrict(att, &att.Predicate.VEX); err != nil {
+		if err := importProductsStrict(att, &att.Predicate.VEX, bo.resolver); err != nil {
 			return att, err
 		}
 	}
