@@ -6,6 +6,7 @@ package attestation
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -324,6 +325,7 @@ func TestNewWithPredicateAndSubjects(t *testing.T) {
 			Name:   "pkg:oci/nginx@sha256:abc123",
 			Digest: map[string]string{"sha256": "abc123def456"},
 		}),
+		WithImportProducts(false),
 	)
 
 	data, err := json.Marshal(att)
@@ -347,6 +349,30 @@ func TestNewWithPredicateNil(t *testing.T) {
 	att := New(WithPredicate(nil))
 	require.NotNil(t, att.Predicate)
 	require.Contains(t, att.Predicate.Context, "openvex.dev")
+}
+
+// faultyOption is a test helper that returns the given error when applied.
+func faultyOption(err error) Option {
+	return func(*buildOpts) error { return err }
+}
+
+func TestNewWithErrorPropagatesOptionError(t *testing.T) {
+	want := errors.New("option blew up")
+	att, err := NewWithError(faultyOption(want))
+	require.ErrorIs(t, err, want)
+	require.Nil(t, att, "no attestation should be returned when an option fails strictly")
+}
+
+func TestNewSwallowsOptionErrorsAndContinues(t *testing.T) {
+	// An erroring option must not prevent later options from being applied.
+	doc := newTestVEX()
+	att := New(
+		faultyOption(errors.New("boom")),
+		WithPredicate(&doc),
+		WithImportProducts(false),
+	)
+	require.NotNil(t, att)
+	require.Equal(t, doc.ID, att.Predicate.ID, "WithPredicate after a failing option must still apply")
 }
 
 func TestAddSubjects(t *testing.T) {
