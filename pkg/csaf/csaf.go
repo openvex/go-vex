@@ -40,13 +40,14 @@ type CSAF struct {
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321-document-property
 type DocumentMetadata struct {
-	Category    string      `json:"category,omitempty"`
-	CSAFVersion string      `json:"csaf_version,omitempty"`
-	Notes       []Note      `json:"notes,omitempty"`
-	Title       string      `json:"title"`
-	Tracking    Tracking    `json:"tracking"`
-	References  []Reference `json:"references,omitempty"`
-	Publisher   Publisher   `json:"publisher"`
+	Category     string         `json:"category,omitempty"`
+	CSAFVersion  string         `json:"csaf_version,omitempty"`
+	Distribution map[string]any `json:"distribution,omitempty"`
+	Notes        []Note         `json:"notes,omitempty"`
+	Title        string         `json:"title"`
+	Tracking     Tracking       `json:"tracking"`
+	References   []Reference    `json:"references,omitempty"`
+	Publisher    Publisher      `json:"publisher"`
 }
 
 // Document references holds a list of references associated with the whole document.
@@ -114,6 +115,9 @@ type Vulnerability struct {
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3232-vulnerabilities-property---cve
 	CVE string `json:"cve"`
+
+	// Title gives the document producer's canonical name for the vulnerability.
+	Title string `json:"title,omitempty"`
 
 	// List of IDs represents a list of unique labels or tracking IDs for the vulnerability (if such information exists).
 	//

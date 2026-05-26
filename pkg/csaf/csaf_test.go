@@ -4,6 +4,8 @@
 package csaf
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,6 +24,63 @@ func TestOpen(t *testing.T) {
 	require.Equal(t, "CSAFPID-0001", doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0])
 	require.Equal(t, "CVE-2009-4488", doc.Vulnerabilities[1].CVE)
 	require.Equal(t, "https://example.com/foo/v1.2.3/mitigation", doc.Vulnerabilities[1].Remediations[0].URL)
+}
+
+func TestToJSONPreservesModeledCSAFFields(t *testing.T) {
+	t.Parallel()
+
+	data := []byte(`{
+	  "document": {
+	    "category": "csaf_vex",
+	    "csaf_version": "2.0",
+	    "distribution": {
+	      "tlp": {
+	        "label": "WHITE"
+	      }
+	    },
+	    "publisher": {
+	      "category": "vendor",
+	      "name": "Example Company",
+	      "namespace": "https://psirt.example.com"
+	    },
+	    "title": "Example VEX Document",
+	    "tracking": {
+	      "current_release_date": "2026-05-26T00:00:00Z",
+	      "id": "EXAMPLE-2026-001",
+	      "initial_release_date": "2026-05-26T00:00:00Z"
+	    }
+	  },
+	  "product_tree": {},
+	  "vulnerabilities": [
+	    {
+	      "cve": "CVE-2026-46598",
+	      "title": "Example vulnerability",
+	      "product_status": {
+	        "last_affected": [
+	          "CSAFPID-0001"
+	        ]
+	      }
+	    }
+	  ]
+	}`)
+
+	doc := &CSAF{}
+	require.NoError(t, json.Unmarshal(data, doc))
+
+	var output bytes.Buffer
+	require.NoError(t, doc.ToJSON(&output))
+
+	roundTrip := map[string]any{}
+	require.NoError(t, json.Unmarshal(output.Bytes(), &roundTrip))
+
+	document := roundTrip["document"].(map[string]any)
+	distribution := document["distribution"].(map[string]any)
+	tlp := distribution["tlp"].(map[string]any)
+	require.Equal(t, "WHITE", tlp["label"])
+
+	vulnerabilities := roundTrip["vulnerabilities"].([]any)
+	vulnerability := vulnerabilities[0].(map[string]any)
+	require.Equal(t, "Example vulnerability", vulnerability["title"])
 }
 
 func TestOpenRHAdvisory(t *testing.T) {

@@ -10,7 +10,6 @@ import (
 	"log/slog"
 	"os"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v3"
 
@@ -165,15 +164,12 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 		productDict[sp.ID] = sp
 	}
 
-	// Create the vex doc
-	v := &VEX{
-		Metadata: Metadata{
-			ID:         csafDoc.Document.Tracking.ID,
-			Author:     "",
-			AuthorRole: "",
-			Timestamp:  &time.Time{},
-		},
-		Statements: []Statement{},
+	// Create the VEX doc with the OpenVEX defaults, then carry over CSAF metadata.
+	vexDoc := New()
+	vexDoc.ID = csafDoc.Document.Tracking.ID
+	vexDoc.Author = csafDoc.Document.Publisher.Name
+	if !csafDoc.Document.Tracking.CurrentReleaseDate.IsZero() {
+		vexDoc.Timestamp = &csafDoc.Document.Tracking.CurrentReleaseDate
 	}
 
 	// Cycle the CSAF vulns list and get those that apply
@@ -208,13 +204,13 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 						stmt.ImpactStatement = impactStatementForProduct(csafDoc.Vulnerabilities[i], productID)
 					}
 
-					v.Statements = append(v.Statements, stmt)
+					vexDoc.Statements = append(vexDoc.Statements, stmt)
 				}
 			}
 		}
 	}
 
-	return v, nil
+	return &vexDoc, nil
 }
 
 func componentFromCSAFProduct(product csaf.Product) Component {
