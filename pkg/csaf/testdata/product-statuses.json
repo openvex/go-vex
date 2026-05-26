@@ -1,0 +1,287 @@
+{
+  "document": {
+    "category": "csaf_vex",
+    "csaf_version": "2.0",
+    "distribution": {
+      "tlp": {
+        "label": "WHITE"
+      }
+    },
+    "notes": [
+      {
+        "category": "summary",
+        "text": "Golden CSAF VEX document covering every CSAF product_status bucket supported by go-vex.",
+        "title": "Coverage summary"
+      }
+    ],
+    "publisher": {
+      "category": "vendor",
+      "contact_details": "security@example.com",
+      "issuing_authority": "Example Product Security",
+      "name": "Example Vendor",
+      "namespace": "https://example.com/security"
+    },
+    "references": [
+      {
+        "category": "self",
+        "summary": "Golden CSAF test fixture",
+        "url": "https://example.com/security/advisories/CSAF-STATUS-GOLDEN"
+      }
+    ],
+    "title": "CSAF product_status golden fixture",
+    "tracking": {
+      "current_release_date": "2026-05-26T00:00:00Z",
+      "generator": {
+        "date": "2026-05-26T00:00:00Z",
+        "engine": {
+          "name": "go-vex-test",
+          "version": "1"
+        }
+      },
+      "id": "CSAF-STATUS-GOLDEN",
+      "initial_release_date": "2026-05-26T00:00:00Z",
+      "revision_history": [
+        {
+          "date": "2026-05-26T00:00:00Z",
+          "legacy_version": "0",
+          "number": "1",
+          "summary": "Initial golden fixture."
+        }
+      ],
+      "status": "final",
+      "version": "1"
+    }
+  },
+  "notes": [
+    {
+      "category": "details",
+      "text": "Document-level note used to verify CSAF note round trips.",
+      "title": "Document note"
+    }
+  ],
+  "product_tree": {
+    "branches": [
+      {
+        "category": "vendor",
+        "name": "Example Vendor",
+        "branches": [
+          {
+            "category": "product_name",
+            "name": "Example Product",
+            "branches": [
+              {
+                "category": "product_version",
+                "name": "first_affected",
+                "product": {
+                  "name": "Example Product first_affected",
+                  "product_id": "CSAFPID-0001",
+                  "product_identification_helper": {
+                    "purl": "pkg:generic/example/first_affected@1.0.0"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "first_fixed",
+                "product": {
+                  "name": "Example Product first_fixed",
+                  "product_id": "CSAFPID-0002",
+                  "product_identification_helper": {
+                    "purl": "pkg:generic/example/first_fixed@1.0.0"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "fixed",
+                "product": {
+                  "name": "Example Product fixed",
+                  "product_id": "CSAFPID-0003",
+                  "product_identification_helper": {
+                    "purl": "pkg:generic/example/fixed@1.0.0"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "known_affected",
+                "product": {
+                  "name": "Example Product known_affected",
+                  "product_id": "CSAFPID-0004",
+                  "product_identification_helper": {
+                    "purl": "pkg:generic/example/known_affected@1.0.0"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "known_not_affected",
+                "product": {
+                  "name": "Example Product known_not_affected",
+                  "product_id": "CSAFPID-0005",
+                  "product_identification_helper": {
+                    "purl": "pkg:generic/example/known_not_affected@1.0.0"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "last_affected",
+                "product": {
+                  "name": "Example Product last_affected",
+                  "product_id": "CSAFPID-0006",
+                  "product_identification_helper": {
+                    "purl": "pkg:generic/example/last_affected@1.0.0"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "recommended",
+                "product": {
+                  "name": "Example Product recommended",
+                  "product_id": "CSAFPID-0007",
+                  "product_identification_helper": {
+                    "purl": "pkg:generic/example/recommended@1.0.0"
+                  }
+                }
+              },
+              {
+                "category": "product_version",
+                "name": "under_investigation",
+                "product": {
+                  "name": "Example Product under_investigation",
+                  "product_id": "CSAFPID-0008",
+                  "product_identification_helper": {
+                    "cpe": "cpe:2.3:a:example:under_investigation:1.0.0:*:*:*:*:*:*:*",
+                    "purl": "pkg:generic/example/under_investigation@1.0.0"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "Example Product Component",
+          "product_id": "CSAFPID-REL-0001"
+        },
+        "product_reference": "CSAFPID-0001",
+        "relates_to_product_reference": "CSAFPID-0004"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2026-46598",
+      "ids": [
+        {
+          "system_name": "Example Tracker",
+          "text": "EXAMPLE-2026-46598"
+        }
+      ],
+      "title": "Example vulnerability covering CSAF product statuses",
+      "release_date": "2026-05-26T00:00:00Z",
+      "notes": [
+        {
+          "category": "description",
+          "text": "This fixture exercises all product_status buckets modeled by go-vex.",
+          "title": "Description"
+        }
+      ],
+      "product_status": {
+        "first_affected": [
+          "CSAFPID-0001"
+        ],
+        "first_fixed": [
+          "CSAFPID-0002"
+        ],
+        "fixed": [
+          "CSAFPID-0003"
+        ],
+        "known_affected": [
+          "CSAFPID-0004"
+        ],
+        "known_not_affected": [
+          "CSAFPID-0005"
+        ],
+        "last_affected": [
+          "CSAFPID-0006"
+        ],
+        "recommended": [
+          "CSAFPID-0007"
+        ],
+        "under_investigation": [
+          "CSAFPID-0008"
+        ]
+      },
+      "threats": [
+        {
+          "category": "impact",
+          "details": "Impact for known_not_affected",
+          "product_ids": [
+            "CSAFPID-0005"
+          ]
+        }
+      ],
+      "remediations": [
+        {
+          "category": "vendor_fix",
+          "date": "2026-05-26T00:00:00Z",
+          "details": "Update first_affected",
+          "entitlements": [
+            "public"
+          ],
+          "group_ids": [
+            "GROUP-0001"
+          ],
+          "product_ids": [
+            "CSAFPID-0001"
+          ],
+          "restart_required": {
+            "category": "none",
+            "details": "No restart required."
+          },
+          "url": "https://example.com/fixes/first_affected"
+        },
+        {
+          "category": "vendor_fix",
+          "details": "Update known_affected",
+          "product_ids": [
+            "CSAFPID-0004"
+          ]
+        },
+        {
+          "category": "vendor_fix",
+          "details": "Update last_affected",
+          "product_ids": [
+            "CSAFPID-0006"
+          ]
+        }
+      ],
+      "flags": [
+        {
+          "label": "component_not_present",
+          "date": "2026-05-26T00:00:00Z",
+          "group_ids": [
+            "GROUP-0002"
+          ],
+          "product_ids": [
+            "CSAFPID-0005"
+          ]
+        }
+      ],
+      "references": [
+        {
+          "category": "external",
+          "summary": "Example vulnerability reference",
+          "url": "https://example.com/vulns/CVE-2026-46598"
+        }
+      ]
+    }
+  ]
+}
