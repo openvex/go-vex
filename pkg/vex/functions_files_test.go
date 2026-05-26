@@ -9,8 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/openvex/go-vex/pkg/csaf"
 	"github.com/stretchr/testify/require"
+
+	"github.com/openvex/go-vex/pkg/csaf"
 )
 
 func TestParse(t *testing.T) {
@@ -21,9 +22,9 @@ func TestParse(t *testing.T) {
 		shouldErr bool
 	}{
 		// Previous versions fail on test
-		"OpenVEX v0.0.1": {"testdata/v0.0.1.json", "", []string{}, true},
+		"OpenVEX v0.0.1": {testV001Path, "", []string{}, true},
 		// Current version
-		"OpenVEX v0.2.0": {"testdata/v0.2.0.json", "pkg:oci/alpine@sha256%3A124c7d2707904eea7431fffe91522a01e5a861a624ee31d03372cc1d138a3126", []string{"CVE-2023-1255", "CVE-2023-2650", "CVE-2023-2975", "CVE-2023-3446", "CVE-2023-3817"}, false},
+		"OpenVEX v0.2.0": {"testdata/v0.2.0.json", testAlpineOCIPURL, []string{testCVE20231255, "CVE-2023-2650", "CVE-2023-2975", "CVE-2023-3446", "CVE-2023-3817"}, false},
 	} {
 		data, err := os.ReadFile(tc.path)
 		require.NoError(t, err)
@@ -58,7 +59,7 @@ func TestLoadYAML(t *testing.T) {
 }
 
 func TestLoadCSAF(t *testing.T) {
-	vexDoc, err := OpenCSAF("testdata/csaf.json", []string{})
+	vexDoc, err := OpenCSAF(testCSAFPath, []string{})
 	require.NoError(t, err)
 	require.Len(t, vexDoc.Statements, 1)
 	require.Len(t, vexDoc.Statements[0].Products, 1)
@@ -75,8 +76,8 @@ func TestOpenCSAF(t *testing.T) {
 		len int
 		id  []string
 	}{
-		{"testdata/csaf.json", 1, []string{"CSAFPID-0001"}},
-		{"testdata/csaf.json", 1, []string{"pkg:golang/github.com/go-homedir@v1.2.0"}},
+		{testCSAFPath, 1, []string{"CSAFPID-0001"}},
+		{testCSAFPath, 1, []string{"pkg:golang/github.com/go-homedir@v1.2.0"}},
 	} {
 		doc, err := OpenCSAF(tc.doc, tc.id)
 		require.NoError(t, err)
@@ -137,10 +138,10 @@ func TestOpen(t *testing.T) {
 		path      string
 		shouldErr bool
 	}{
-		"OpenVEX v0.0.1":              {"testdata/v0.0.1.json", false},
+		"OpenVEX v0.0.1":              {testV001Path, false},
 		"OpenVEX v0.0.1 (no version)": {"testdata/v0.0.1-noversion.json", false},
 		"OpenVEX v0.2.0":              {"testdata/v0.2.0.json", false},
-		"CSAF document":               {"testdata/csaf.json", false},
+		"CSAF document":               {testCSAFPath, false},
 	} {
 		doc, err := Open(tc.path)
 		if tc.shouldErr {

@@ -30,7 +30,7 @@ func vexWithProducts(prods ...vex.Product) vex.VEX {
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/import",
-			Author:    "mailto:test@example.com",
+			Author:    testAuthorEmail,
 			Timestamp: &ts,
 			Version:   1,
 		},
@@ -57,7 +57,7 @@ func TestImportOCIPurlWithEmbeddedDigest(t *testing.T) {
 	s := att.Subject[0]
 	require.Equal(t, purl, s.GetUri(), "original purl must be in Uri")
 	require.Equal(t, "nginx@sha256:abc123def456", s.GetName(), "image ref must be in Name")
-	require.Equal(t, map[string]string{"sha256": "abc123def456"}, s.GetDigest())
+	require.Equal(t, map[string]string{testSHA256: testDigestABC123Def456}, s.GetDigest())
 }
 
 func TestImportOCIPurlWithRepositoryURLAndTag(t *testing.T) {
@@ -75,11 +75,11 @@ func TestImportOCIPurlWithRepositoryURLAndTag(t *testing.T) {
 	s := att.Subject[0]
 	require.Equal(t, purl, s.GetUri())
 	require.Equal(t, "ghcr.io/myorg/app:1.2.3", s.GetName())
-	require.Equal(t, map[string]string{"sha256": "cafebabe"}, s.GetDigest())
+	require.Equal(t, map[string]string{testSHA256: "cafebabe"}, s.GetDigest())
 }
 
 func TestImportOCIPurlFromIdentifiers(t *testing.T) {
-	ociPurl := "pkg:oci/nginx@sha256:abc123"
+	ociPurl := testOCINginxPURL
 	doc := vexWithProducts(vex.Product{
 		Component: vex.Component{
 			ID: "https://example.com/some-iri",
@@ -144,7 +144,7 @@ func TestImportNonOCIWithHashes(t *testing.T) {
 	require.Len(t, att.Subject, 1)
 	s := att.Subject[0]
 	require.Equal(t, "pkg:npm/lodash@4.17.21", s.GetName())
-	require.Equal(t, "deadbeef", s.GetDigest()["sha256"], "vex.SHA256 must map to in-toto sha256")
+	require.Equal(t, "deadbeef", s.GetDigest()[testSHA256], "vex.SHA256 must map to in-toto sha256")
 	require.Equal(t, "feedface", s.GetDigest()["sha512"], "vex.SHA512 must map to in-toto sha512")
 }
 
@@ -171,7 +171,7 @@ func TestImportDropsUnmappableAlgorithm(t *testing.T) {
 func TestImportDefaultsOn(t *testing.T) {
 	resolver := ImageDigestResolver(func(string) (string, error) { return "sha256:aaa", nil })
 	doc := vexWithProducts(vex.Product{
-		Component: vex.Component{ID: "pkg:oci/app"},
+		Component: vex.Component{ID: testOCIAppPURL},
 	})
 	// No WithImportProducts option — default should import.
 	att := New(WithPredicate(&doc), WithImageDigestResolver(resolver))
@@ -207,7 +207,7 @@ func TestImportDedupesAcrossStatements(t *testing.T) {
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/dup",
-			Author:    "mailto:test@example.com",
+			Author:    testAuthorEmail,
 			Timestamp: &ts,
 			Version:   1,
 		},
@@ -223,7 +223,7 @@ func TestNewWithErrorPropagatesResolverFailure(t *testing.T) {
 		return "", errors.New("registry unreachable")
 	})
 	doc := vexWithProducts(vex.Product{
-		Component: vex.Component{ID: "pkg:oci/app"},
+		Component: vex.Component{ID: testOCIAppPURL},
 	})
 
 	att, err := NewWithError(WithPredicate(&doc), WithImageDigestResolver(resolver))
@@ -245,7 +245,7 @@ func TestNewBestEffortSkipsOnResolverFailure(t *testing.T) {
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/skip",
-			Author:    "mailto:test@example.com",
+			Author:    testAuthorEmail,
 			Timestamp: &ts,
 			Version:   1,
 		},
@@ -270,12 +270,12 @@ func TestNewBestEffortSkipsOnResolverFailure(t *testing.T) {
 func TestImportPreservesExplicitSubjects(t *testing.T) {
 	resolver := ImageDigestResolver(func(string) (string, error) { return "sha256:imported", nil })
 	doc := vexWithProducts(vex.Product{
-		Component: vex.Component{ID: "pkg:oci/app"},
+		Component: vex.Component{ID: testOCIAppPURL},
 	})
 
 	explicit := &intoto.ResourceDescriptor{
 		Name:   "manually-added",
-		Digest: map[string]string{"sha256": "manual"},
+		Digest: map[string]string{testSHA256: "manual"},
 	}
 	att := New(
 		WithPredicate(&doc),
@@ -291,7 +291,7 @@ func TestImportNoResolverNoDigestStrictErrors(t *testing.T) {
 	// OCI purl without an embedded digest and no resolver configured:
 	// NewWithError must surface errNoResolver.
 	doc := vexWithProducts(vex.Product{
-		Component: vex.Component{ID: "pkg:oci/app"},
+		Component: vex.Component{ID: testOCIAppPURL},
 	})
 
 	att, err := NewWithError(WithPredicate(&doc))
@@ -302,7 +302,7 @@ func TestImportNoResolverNoDigestStrictErrors(t *testing.T) {
 func TestImportNoResolverNoDigestBestEffortSkips(t *testing.T) {
 	// Best-effort New must skip the unresolvable product rather than error.
 	doc := vexWithProducts(
-		vex.Product{Component: vex.Component{ID: "pkg:oci/app"}},
+		vex.Product{Component: vex.Component{ID: testOCIAppPURL}},
 		vex.Product{Component: vex.Component{ID: "pkg:oci/good@sha256:abc"}},
 	)
 

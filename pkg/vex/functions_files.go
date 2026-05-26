@@ -176,36 +176,40 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 	for i := range csafDoc.Vulnerabilities {
 		for status, docProducts := range csafDoc.Vulnerabilities[i].ProductStatus {
 			for _, productID := range docProducts {
-				if product, ok := productDict[productID]; ok {
-					// Check we have a valid status
-					vexStatus := StatusFromCSAF(string(status))
-					if vexStatus == "" {
-						return nil, fmt.Errorf("invalid status for product %s", productID)
-					}
-
-					stmt := Statement{
-						Vulnerability: Vulnerability{Name: VulnerabilityID(csafDoc.Vulnerabilities[i].CVE)},
-						Status:        vexStatus,
-						StatusNotes:   fmt.Sprintf("CSAF product_status: %s", status),
-						Products: []Product{
-							{
-								Component: componentFromCSAFProduct(product),
-							},
-						},
-					}
-
-					switch vexStatus {
-					case StatusAffected:
-						stmt.ActionStatement = actionStatementForProduct(csafDoc.Vulnerabilities[i], productID)
-						if stmt.ActionStatement == "" {
-							stmt.ActionStatement = NoActionStatementMsg
-						}
-					case StatusNotAffected:
-						stmt.ImpactStatement = impactStatementForProduct(csafDoc.Vulnerabilities[i], productID)
-					}
-
-					vexDoc.Statements = append(vexDoc.Statements, stmt)
+				product, ok := productDict[productID]
+				if !ok {
+					continue
 				}
+
+				// Check we have a valid status
+				vexStatus := StatusFromCSAF(status)
+				if vexStatus == "" {
+					return nil, fmt.Errorf("invalid status for product %s", productID)
+				}
+
+				stmt := Statement{
+					Vulnerability: Vulnerability{Name: VulnerabilityID(csafDoc.Vulnerabilities[i].CVE)},
+					Status:        vexStatus,
+					StatusNotes:   fmt.Sprintf("CSAF product_status: %s", status),
+					Products: []Product{
+						{
+							Component: componentFromCSAFProduct(product),
+						},
+					},
+				}
+
+				switch vexStatus {
+				case StatusAffected:
+					stmt.ActionStatement = actionStatementForProduct(&csafDoc.Vulnerabilities[i], productID)
+					if stmt.ActionStatement == "" {
+						stmt.ActionStatement = NoActionStatementMsg
+					}
+				case StatusNotAffected:
+					stmt.ImpactStatement = impactStatementForProduct(&csafDoc.Vulnerabilities[i], productID)
+				case StatusFixed, StatusUnderInvestigation:
+				}
+
+				vexDoc.Statements = append(vexDoc.Statements, stmt)
 			}
 		}
 	}
@@ -243,19 +247,19 @@ func componentFromCSAFProduct(product csaf.Product) Component {
 	return component
 }
 
-func actionStatementForProduct(vuln csaf.Vulnerability, productID string) string {
-	for _, remediation := range vuln.Remediations {
-		if productIDMatches(remediation.ProductIDs, productID) {
-			return remediation.Details
+func actionStatementForProduct(vuln *csaf.Vulnerability, productID string) string {
+	for i := range vuln.Remediations {
+		if productIDMatches(vuln.Remediations[i].ProductIDs, productID) {
+			return vuln.Remediations[i].Details
 		}
 	}
 	return ""
 }
 
-func impactStatementForProduct(vuln csaf.Vulnerability, productID string) string {
-	for _, threat := range vuln.Threats {
-		if productIDMatches(threat.ProductIDs, productID) {
-			return threat.Details
+func impactStatementForProduct(vuln *csaf.Vulnerability, productID string) string {
+	for i := range vuln.Threats {
+		if productIDMatches(vuln.Threats[i].ProductIDs, productID) {
+			return vuln.Threats[i].Details
 		}
 	}
 	return ""

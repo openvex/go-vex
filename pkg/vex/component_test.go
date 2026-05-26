@@ -21,53 +21,53 @@ func TestComponentMatches(t *testing.T) {
 			true,
 		},
 		"misc identifier": {
-			"madeup-2023-12345",
+			testMadeupIdentifier,
 			&Component{
-				Identifiers: map[IdentifierType]string{"customIdentifier": "madeup-2023-12345"},
+				Identifiers: map[IdentifierType]string{"customIdentifier": testMadeupIdentifier},
 			},
 			true,
 		},
 		"wrong misc identifier": {
-			"madeup-2023-12345",
+			testMadeupIdentifier,
 			&Component{
 				Identifiers: map[IdentifierType]string{"customIdentifier": "another-string"},
 			},
 			false,
 		},
 		"same purl": {
-			"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64",
+			testWolfiCurlPURL,
 			&Component{
-				Identifiers: map[IdentifierType]string{PURL: "pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64"},
+				Identifiers: map[IdentifierType]string{PURL: testWolfiCurlPURL},
 			},
 			true,
 		},
 		"globing purl": {
-			"pkg:oci/curl@sha256:47fed8868b46b060efb8699dc40e981a0c785650223e03602d8c4493fc75b68c",
+			testOCICurlDigestPURL,
 			&Component{
-				Identifiers: map[IdentifierType]string{PURL: "pkg:oci/curl"},
+				Identifiers: map[IdentifierType]string{PURL: testOCICurlPURL},
 			},
 			true,
 		},
 		"globing purl (inverse)": {
-			"pkg:oci/curl",
+			testOCICurlPURL,
 			&Component{
 				Identifiers: map[IdentifierType]string{
-					PURL: "pkg:oci/curl@sha256:47fed8868b46b060efb8699dc40e981a0c785650223e03602d8c4493fc75b68c",
+					PURL: testOCICurlDigestPURL,
 				},
 			},
 			false,
 		},
 		"hash": {
-			"77d86e9752cb933569dfa1f693ee4338e65b28b4",
+			testSHA1Digest,
 			&Component{
 				Hashes: map[Algorithm]Hash{
-					SHA1: "77d86e9752cb933569dfa1f693ee4338e65b28b4",
+					SHA1: testSHA1Digest,
 				},
 			},
 			true,
 		},
 		"wrong hash": {
-			"77d86e9752cb933569dfa1f693ee4338e65b28b4",
+			testSHA1Digest,
 			&Component{
 				Hashes: map[Algorithm]Hash{
 					SHA1: "b5cc41d90d7ccc195c4a24ceb32656942c9854ea",
