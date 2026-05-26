@@ -5,6 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 
 package vex
 
+import "github.com/openvex/go-vex/pkg/csaf"
+
 // Status describes the exploitability status of a component with respect to a
 // vulnerability.
 type Status string
@@ -51,14 +53,18 @@ func (s Status) Valid() bool {
 
 // StatusFromCSAF returns a vex status from the CSAF status
 func StatusFromCSAF(csafStatus string) Status {
-	switch csafStatus {
-	case "known_not_affected":
+	switch csaf.ProductStatusName(csafStatus) {
+	case csaf.ProductStatusKnownNotAffected:
 		return StatusNotAffected
-	case "fixed":
+	case csaf.ProductStatusFixed,
+		csaf.ProductStatusFirstFixed,
+		csaf.ProductStatusRecommended:
 		return StatusFixed
-	case "under_investigation":
+	case csaf.ProductStatusUnderInvestigation:
 		return StatusUnderInvestigation
-	case "known_affected":
+	case csaf.ProductStatusKnownAffected,
+		csaf.ProductStatusFirstAffected,
+		csaf.ProductStatusLastAffected:
 		return StatusAffected
 	default:
 		return ""

@@ -135,8 +135,11 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 	if err != nil {
 		return nil, fmt.Errorf("opening csaf doc: %w", err)
 	}
+	if err := csafDoc.ValidateProductStatuses(); err != nil {
+		return nil, fmt.Errorf("validating csaf product statuses: %w", err)
+	}
 
-	productDict := map[string]string{}
+	productDict := map[string]csaf.Product{}
 	filterDict := map[string]string{}
 	for _, pid := range products {
 		filterDict[pid] = pid
@@ -159,9 +162,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 			}
 		}
 
-		for _, h := range sp.IdentificationHelper {
-			productDict[sp.ID] = h
-		}
+		productDict[sp.ID] = sp
 	}
 
 	// Create the vex doc
@@ -179,42 +180,98 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 	for i := range csafDoc.Vulnerabilities {
 		for status, docProducts := range csafDoc.Vulnerabilities[i].ProductStatus {
 			for _, productID := range docProducts {
-				if _, ok := productDict[productID]; ok {
+				if product, ok := productDict[productID]; ok {
 					// Check we have a valid status
-					if StatusFromCSAF(status) == "" {
+					vexStatus := StatusFromCSAF(string(status))
+					if vexStatus == "" {
 						return nil, fmt.Errorf("invalid status for product %s", productID)
 					}
 
-					// TODO search the threats struct for justification, etc
-					just := ""
-					for _, t := range csafDoc.Vulnerabilities[i].Threats {
-						// Search the threats for a justification
-						for _, p := range t.ProductIDs {
-							if p == productID {
-								just = t.Details
-							}
-						}
-					}
-
-					v.Statements = append(v.Statements, Statement{
-						Vulnerability:   Vulnerability{Name: VulnerabilityID(csafDoc.Vulnerabilities[i].CVE)},
-						Status:          StatusFromCSAF(status),
-						Justification:   "", // Justifications are not machine readable in csaf, it seems
-						ActionStatement: just,
+					stmt := Statement{
+						Vulnerability: Vulnerability{Name: VulnerabilityID(csafDoc.Vulnerabilities[i].CVE)},
+						Status:        vexStatus,
+						StatusNotes:   fmt.Sprintf("CSAF product_status: %s", status),
 						Products: []Product{
 							{
-								Component: Component{
-									ID: productID,
-								},
+								Component: componentFromCSAFProduct(product),
 							},
 						},
-					})
+					}
+
+					switch vexStatus {
+					case StatusAffected:
+						stmt.ActionStatement = actionStatementForProduct(csafDoc.Vulnerabilities[i], productID)
+						if stmt.ActionStatement == "" {
+							stmt.ActionStatement = NoActionStatementMsg
+						}
+					case StatusNotAffected:
+						stmt.ImpactStatement = impactStatementForProduct(csafDoc.Vulnerabilities[i], productID)
+					}
+
+					v.Statements = append(v.Statements, stmt)
 				}
 			}
 		}
 	}
 
 	return v, nil
+}
+
+func componentFromCSAFProduct(product csaf.Product) Component {
+	component := Component{
+		ID: product.ID,
+	}
+
+	if purl := product.IdentificationHelper["purl"]; purl != "" {
+		component.ID = purl
+		component.Identifiers = map[IdentifierType]string{
+			PURL: purl,
+		}
+	}
+
+	if cpe := product.IdentificationHelper["cpe"]; cpe != "" {
+		if component.ID == product.ID {
+			component.ID = cpe
+		}
+		if component.Identifiers == nil {
+			component.Identifiers = map[IdentifierType]string{}
+		}
+		switch {
+		case strings.HasPrefix(cpe, "cpe:2.3:"):
+			component.Identifiers[CPE23] = cpe
+		case strings.HasPrefix(cpe, "cpe:/"):
+			component.Identifiers[CPE22] = cpe
+		}
+	}
+
+	return component
+}
+
+func actionStatementForProduct(vuln csaf.Vulnerability, productID string) string {
+	for _, remediation := range vuln.Remediations {
+		if productIDMatches(remediation.ProductIDs, productID) {
+			return remediation.Details
+		}
+	}
+	return ""
+}
+
+func impactStatementForProduct(vuln csaf.Vulnerability, productID string) string {
+	for _, threat := range vuln.Threats {
+		if productIDMatches(threat.ProductIDs, productID) {
+			return threat.Details
+		}
+	}
+	return ""
+}
+
+func productIDMatches(productIDs []string, productID string) bool {
+	for _, id := range productIDs {
+		if id == productID {
+			return true
+		}
+	}
+	return false
 }
 
 // MergeFilesWithOptions opens a list of vex documents and after parsing them

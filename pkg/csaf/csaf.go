@@ -6,6 +6,7 @@ package csaf
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"time"
 )
@@ -32,17 +33,20 @@ type CSAF struct {
 
 	// Notes holds notes associated with the whole document.
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3217-document-property---notes
-	Notes []Note `json:"notes"`
+	Notes []Note `json:"notes,omitempty"`
 }
 
 // DocumentMetadata contains metadata about the CSAF document itself.
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321-document-property
 type DocumentMetadata struct {
-	Title      string      `json:"title"`
-	Tracking   Tracking    `json:"tracking"`
-	References []Reference `json:"references"`
-	Publisher  Publisher   `json:"publisher"`
+	Category    string      `json:"category,omitempty"`
+	CSAFVersion string      `json:"csaf_version,omitempty"`
+	Notes       []Note      `json:"notes,omitempty"`
+	Title       string      `json:"title"`
+	Tracking    Tracking    `json:"tracking"`
+	References  []Reference `json:"references,omitempty"`
+	Publisher   Publisher   `json:"publisher"`
 }
 
 // Document references holds a list of references associated with the whole document.
@@ -58,9 +62,37 @@ type Reference struct {
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32112-document-property---tracking
 type Tracking struct {
-	ID                 string    `json:"id"`
-	CurrentReleaseDate time.Time `json:"current_release_date"`
-	InitialReleaseDate time.Time `json:"initial_release_date"`
+	ID                 string     `json:"id"`
+	CurrentReleaseDate time.Time  `json:"current_release_date"`
+	InitialReleaseDate time.Time  `json:"initial_release_date"`
+	RevisionHistory    []Revision `json:"revision_history,omitempty"`
+	Status             string     `json:"status,omitempty"`
+	Version            string     `json:"version,omitempty"`
+	Generator          Generator  `json:"generator,omitempty,omitzero"`
+}
+
+// Revision contains information needed to track a document revision.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321126-revision-history-type---revision
+type Revision struct {
+	Date          time.Time `json:"date"`
+	LegacyVersion string    `json:"legacy_version,omitempty"`
+	Number        string    `json:"number"`
+	Summary       string    `json:"summary"`
+}
+
+// Generator holds information about how the CSAF document was generated.
+//
+// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321123-document-property---tracking---generator
+type Generator struct {
+	Date   time.Time `json:"date,omitempty,omitzero"`
+	Engine Engine    `json:"engine"`
+}
+
+// Engine identifies the generator engine.
+type Engine struct {
+	Name    string `json:"name"`
+	Version string `json:"version,omitempty"`
 }
 
 // Publisher provides information on the publishing entity.
@@ -68,8 +100,8 @@ type Tracking struct {
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3218-document-property---publisher
 type Publisher struct {
 	Category         string `json:"category"`
-	ContactDetails   string `json:"contact_details"`
-	IssuingAuthority string `json:"issuing_authority"`
+	ContactDetails   string `json:"contact_details,omitempty"`
+	IssuingAuthority string `json:"issuing_authority,omitempty"`
 	Name             string `json:"name"`
 	Namespace        string `json:"namespace"`
 }
@@ -86,50 +118,50 @@ type Vulnerability struct {
 	// List of IDs represents a list of unique labels or tracking IDs for the vulnerability (if such information exists).
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3236-vulnerabilities-property---ids
-	IDs []TrackingID `json:"ids"`
+	IDs []TrackingID `json:"ids,omitempty"`
 
 	// Provide details on the status of the referenced product related to the vulnerability.
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3239-vulnerabilities-property---product-status
-	ProductStatus map[string][]string `json:"product_status"`
+	ProductStatus ProductStatus `json:"product_status,omitempty"`
 
 	// Provide details of threats associated with a vulnerability.
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32314-vulnerabilities-property---threats
-	Threats []ThreatData `json:"threats"`
+	Threats []ThreatData `json:"threats,omitempty"`
 
 	// Provide details of remediations associated with a Vulnerability
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32312-vulnerabilities-property---remediations
-	Remediations []RemediationData `json:"remediations"`
+	Remediations []RemediationData `json:"remediations,omitempty"`
 
 	// Machine readable flags for products related to vulnerability
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3235-vulnerabilities-property---flags
-	Flags []Flag `json:"flags"`
+	Flags []Flag `json:"flags,omitempty"`
 
 	// Vulnerability references holds a list of references associated with this vulnerability item.
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32310-vulnerabilities-property---references
-	References []Reference `json:"references"`
+	References []Reference `json:"references,omitempty"`
 
-	ReleaseDate time.Time `json:"release_date"`
+	ReleaseDate time.Time `json:"release_date,omitempty,omitzero"`
 
 	// Notes holds notes associated with the Vulnerability object.
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3238-vulnerabilities-property---notes
-	Notes []Note `json:"notes"`
+	Notes []Note `json:"notes,omitempty"`
 
 	// Scores holds the scores associated with the Vulnerability object.
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32313-vulnerabilities-property---scores
 	// Currently only CVSS v3 is supported.
-	Scores []Score `json:"scores"`
+	Scores []Score `json:"scores,omitempty"`
 }
 
 type Note struct {
 	Category string `json:"category"`
 	Text     string `json:"text"`
-	Title    string `json:"title"`
-	Audience string `json:"audience"`
+	Title    string `json:"title,omitempty"`
+	Audience string `json:"audience,omitempty"`
 }
 
 // Every ID item with the two mandatory properties System Name (system_name) and Text (text) contains a single unique label or tracking ID for the vulnerability.
@@ -154,13 +186,13 @@ type ThreatData struct {
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#32312-vulnerabilities-property---remediations
 type RemediationData struct {
 	Category     string      `json:"category"`
-	Date         time.Time   `json:"date"`
+	Date         time.Time   `json:"date,omitempty,omitzero"`
 	Details      string      `json:"details"`
-	Entitlements []string    `json:"entitlements"`
-	GroupIDs     []string    `json:"group_ids"`
-	ProductIDs   []string    `json:"product_ids"`
-	Restart      RestartData `json:"restart_required"`
-	URL          string      `json:"url"`
+	Entitlements []string    `json:"entitlements,omitempty"`
+	GroupIDs     []string    `json:"group_ids,omitempty"`
+	ProductIDs   []string    `json:"product_ids,omitempty"`
+	Restart      RestartData `json:"restart_required,omitempty,omitzero"`
+	URL          string      `json:"url,omitempty"`
 }
 
 // Remediation instructions for restart of affected software.
@@ -168,7 +200,7 @@ type RemediationData struct {
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#323127-vulnerabilities-property---remediations---restart-required
 type RestartData struct {
 	Category string `json:"category"`
-	Details  string `json:"details"`
+	Details  string `json:"details,omitempty"`
 }
 
 // Machine readable flags for products related to the Vulnerability
@@ -176,9 +208,9 @@ type RestartData struct {
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3235-vulnerabilities-property---flags
 type Flag struct {
 	Label      string    `json:"label"`
-	Date       time.Time `json:"date"`
-	GroupIDs   []string  `json:"group_ids"`
-	ProductIDs []string  `json:"product_ids"`
+	Date       time.Time `json:"date,omitempty,omitzero"`
+	GroupIDs   []string  `json:"group_ids,omitempty"`
+	ProductIDs []string  `json:"product_ids,omitempty"`
 }
 
 // ProductBranch is a recursive struct that contains information about a product and
@@ -186,11 +218,11 @@ type Flag struct {
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3221-product-tree-property---branches
 type ProductBranch struct {
-	Category      string          `json:"category"`
-	Name          string          `json:"name"`
-	Branches      []ProductBranch `json:"branches"`
-	Product       Product         `json:"product,omitempty"`
-	Relationships []Relationship  `json:"relationships"`
+	Category      string          `json:"category,omitempty"`
+	Name          string          `json:"name,omitempty"`
+	Branches      []ProductBranch `json:"branches,omitempty"`
+	Product       Product         `json:"product,omitempty,omitzero"`
+	Relationships []Relationship  `json:"relationships,omitempty"`
 }
 
 // Relationship establishes a link between two existing full_product_name_t elements, allowing
@@ -210,7 +242,7 @@ type Relationship struct {
 type Product struct {
 	Name                 string            `json:"name"`
 	ID                   string            `json:"product_id"`
-	IdentificationHelper map[string]string `json:"product_identification_helper"`
+	IdentificationHelper map[string]string `json:"product_identification_helper,omitempty"`
 }
 
 // Score contains score information tied to the listed products.
@@ -278,6 +310,29 @@ func Open(path string) (*CSAF, error) {
 	}
 
 	return csafDoc, nil
+}
+
+// ToJSON serializes the CSAF document to JSON and writes it to the passed writer.
+func (csafDoc *CSAF) ToJSON(w io.Writer) error {
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	enc.SetEscapeHTML(false)
+
+	if err := enc.Encode(csafDoc); err != nil {
+		return fmt.Errorf("encoding csaf document: %w", err)
+	}
+	return nil
+}
+
+// ValidateProductStatuses verifies that all vulnerability product_status
+// buckets use CSAF-defined status names.
+func (csafDoc *CSAF) ValidateProductStatuses() error {
+	for i := range csafDoc.Vulnerabilities {
+		if err := csafDoc.Vulnerabilities[i].ProductStatus.Validate(); err != nil {
+			return fmt.Errorf("vulnerabilities[%d].product_status: %w", i, err)
+		}
+	}
+	return nil
 }
 
 // FirstProductName returns the first product name in the product tree
