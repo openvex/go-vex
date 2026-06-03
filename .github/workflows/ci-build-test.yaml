@@ -27,13 +27,13 @@ jobs:
       GO_MINOR_VERSION_STABLE: ${{ steps.versions.outputs.GO_MINOR_VERSION_STABLE }}
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
       - name: Resolve Go versions
         id: versions
-        uses: carabiner-dev/actions/go/versions@e0e3b8149dafed833431095bc148d50e7eade4e8
+        uses: carabiner-dev/actions/go/versions@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
 
   build-matrix:
     name: build (${{ matrix.go-version }})
@@ -50,7 +50,7 @@ jobs:
           - ${{ needs.resolve-versions.outputs.GO_MINOR_VERSION_STABLE }}
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
@@ -78,7 +78,7 @@ jobs:
           - ${{ needs.resolve-versions.outputs.GO_MINOR_VERSION_STABLE }}
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
 
