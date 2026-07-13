@@ -450,3 +450,20 @@ func TestExtractStatements(t *testing.T) {
 		})
 	}
 }
+
+func TestStatementsByVulnerabilityNilTimestamp(t *testing.T) {
+	// A document that omits the top-level timestamp decodes with a nil
+	// Timestamp. StatementsByVulnerability must not dereference it.
+	data := []byte(`{"@context":"https://openvex.dev/ns/v0.2.0","@id":"https://example.com/vex/test","author":"test","version":1,"statements":[{"vulnerability":{"name":"CVE-2024-9999"},"products":[{"@id":"pkg:golang/example.com/x@1.0"}],"status":"not_affected","justification":"vulnerable_code_not_present"}]}`)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+	require.Nil(t, doc.Timestamp)
+
+	var statements []Statement
+	require.NotPanics(t, func() {
+		statements = doc.StatementsByVulnerability("CVE-2024-9999")
+	})
+	require.Len(t, statements, 1)
+	require.True(t, statements[0].Vulnerability.Matches("CVE-2024-9999"))
+}
