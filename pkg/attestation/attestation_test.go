@@ -23,7 +23,7 @@ func newTestVEX() vex.VEX {
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/vex-001",
-			Author:    "mailto:test@example.com",
+			Author:    testAuthorEmail,
 			Timestamp: &ts,
 			Version:   1,
 		},
@@ -35,7 +35,7 @@ func newTestVEX() vex.VEX {
 				Products: []vex.Product{
 					{
 						Component: vex.Component{
-							ID: "pkg:oci/nginx@sha256:abc123",
+							ID: testOCINginxPURL,
 						},
 					},
 				},
@@ -67,7 +67,7 @@ func TestPredicateGetData(t *testing.T) {
 	// Verify the author round-trips correctly
 	var author string
 	require.NoError(t, json.Unmarshal(parsed["author"], &author))
-	require.Equal(t, "mailto:test@example.com", author)
+	require.Equal(t, testAuthorEmail, author)
 }
 
 func TestPredicateGetDataNilDoc(t *testing.T) {
@@ -112,8 +112,8 @@ func TestAttestationMarshalJSON(t *testing.T) {
 	}
 	require.NoError(t, att.AddSubjects([]*intoto.ResourceDescriptor{
 		{
-			Name:   "pkg:oci/nginx@sha256:abc123",
-			Digest: map[string]string{"sha256": "abc123def456"},
+			Name:   testOCINginxPURL,
+			Digest: map[string]string{testSHA256: testDigestABC123Def456},
 		},
 	}))
 
@@ -146,11 +146,11 @@ func TestAttestationMarshalJSON(t *testing.T) {
 
 	var name string
 	require.NoError(t, json.Unmarshal(subjects[0]["name"], &name))
-	require.Equal(t, "pkg:oci/nginx@sha256:abc123", name)
+	require.Equal(t, testOCINginxPURL, name)
 
 	var digest map[string]string
 	require.NoError(t, json.Unmarshal(subjects[0]["digest"], &digest))
-	require.Equal(t, "abc123def456", digest["sha256"])
+	require.Equal(t, testDigestABC123Def456, digest[testSHA256])
 
 	// predicate must contain the VEX document
 	var predicate map[string]json.RawMessage
@@ -160,7 +160,7 @@ func TestAttestationMarshalJSON(t *testing.T) {
 
 	var author string
 	require.NoError(t, json.Unmarshal(predicate["author"], &author))
-	require.Equal(t, "mailto:test@example.com", author)
+	require.Equal(t, testAuthorEmail, author)
 }
 
 func TestAttestationMarshalNoProtobufFieldNames(t *testing.T) {
@@ -188,8 +188,8 @@ func TestAttestationToJSON(t *testing.T) {
 	}
 	require.NoError(t, att.AddSubjects([]*intoto.ResourceDescriptor{
 		{
-			Name:   "pkg:oci/nginx@sha256:abc123",
-			Digest: map[string]string{"sha256": "abc123def456"},
+			Name:   testOCINginxPURL,
+			Digest: map[string]string{testSHA256: testDigestABC123Def456},
 		},
 	}))
 
@@ -216,7 +216,7 @@ func TestAttestationRoundTrip(t *testing.T) {
 	require.NoError(t, att.AddSubjects([]*intoto.ResourceDescriptor{
 		{
 			Name:   "test-subject",
-			Digest: map[string]string{"sha256": "deadbeef"},
+			Digest: map[string]string{testSHA256: "deadbeef"},
 		},
 	}))
 
@@ -247,11 +247,11 @@ func TestAttestationMultipleSubjects(t *testing.T) {
 	require.NoError(t, att.AddSubjects([]*intoto.ResourceDescriptor{
 		{
 			Name:   "pkg:oci/app@sha256:aaa",
-			Digest: map[string]string{"sha256": "aaa"},
+			Digest: map[string]string{testSHA256: "aaa"},
 		},
 		{
 			Name:   "pkg:oci/app@sha256:bbb",
-			Digest: map[string]string{"sha256": "bbb"},
+			Digest: map[string]string{testSHA256: "bbb"},
 		},
 	}))
 
@@ -289,21 +289,21 @@ func TestNewWithPredicate(t *testing.T) {
 	require.NoError(t, json.Unmarshal(envelope["predicate"], &predicate))
 	var author string
 	require.NoError(t, json.Unmarshal(predicate["author"], &author))
-	require.Equal(t, "mailto:test@example.com", author)
+	require.Equal(t, testAuthorEmail, author)
 }
 
 func TestNewWithSubjects(t *testing.T) {
 	s1 := &intoto.ResourceDescriptor{
 		Name:   "pkg:oci/app@sha256:aaa",
-		Digest: map[string]string{"sha256": "aaa"},
+		Digest: map[string]string{testSHA256: "aaa"},
 	}
 	s2 := &intoto.ResourceDescriptor{
 		Name:   "pkg:oci/app@sha256:bbb",
-		Digest: map[string]string{"sha256": "bbb"},
+		Digest: map[string]string{testSHA256: "bbb"},
 	}
 	s3 := &intoto.ResourceDescriptor{
 		Name:   "pkg:oci/app@sha256:ccc",
-		Digest: map[string]string{"sha256": "ccc"},
+		Digest: map[string]string{testSHA256: "ccc"},
 	}
 
 	// Variadic in a single call plus a second WithSubjects call must accumulate.
@@ -322,8 +322,8 @@ func TestNewWithPredicateAndSubjects(t *testing.T) {
 	att := New(
 		WithPredicate(&doc),
 		WithSubjects(&intoto.ResourceDescriptor{
-			Name:   "pkg:oci/nginx@sha256:abc123",
-			Digest: map[string]string{"sha256": "abc123def456"},
+			Name:   testOCINginxPURL,
+			Digest: map[string]string{testSHA256: testDigestABC123Def456},
 		}),
 		WithImportProducts(false),
 	)
@@ -382,11 +382,11 @@ func TestAddSubjects(t *testing.T) {
 	validSubs := []*intoto.ResourceDescriptor{
 		{
 			Name:   "test1",
-			Digest: map[string]string{"sha256": "abc123"},
+			Digest: map[string]string{testSHA256: "abc123"},
 		},
 		{
 			Name:   "test2",
-			Digest: map[string]string{"sha256": "def456"},
+			Digest: map[string]string{testSHA256: "def456"},
 		},
 	}
 
