@@ -30,7 +30,7 @@ jobs:
 
       - name: Resolve Go versions
         id: versions
-        uses: carabiner-dev/actions/go/versions@94f29392187fe5082d1195a7d4cae3a7ddf09d9c
+        uses: carabiner-dev/actions/go/versions@2a4b2cd115ede14629b03ef7e77586d3269d4c72
 
   golangci:
     name: golangci-lint
