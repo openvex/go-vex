@@ -30,7 +30,7 @@ jobs:
           check-latest: true
 
       - name: Install bom
-        uses: kubernetes-sigs/release-actions/setup-bom@8753ea6bdadb814d779c6ec34eaca689dbfb492b # v0.4.3
+        uses: kubernetes-sigs/release-actions/setup-bom@c130b4494862d330a1aa4de320076c666d0708da # v0.4.4
 
       - name: Set tag output
         id: tag
@@ -42,7 +42,7 @@ jobs:
           bom generate --format=json -o /tmp/${{github.event.repository.name}}-${{ steps.tag.outputs.tag_name }}.spdx.json .
 
       - name: Publish Release
-        uses: kubernetes-sigs/release-actions/publish-release@8753ea6bdadb814d779c6ec34eaca689dbfb492b # v0.4.3
+        uses: kubernetes-sigs/release-actions/publish-release@c130b4494862d330a1aa4de320076c666d0708da # v0.4.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
