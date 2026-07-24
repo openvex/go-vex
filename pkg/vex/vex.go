@@ -415,7 +415,11 @@ func (vexDoc *VEX) StatementsByVulnerability(id string) []Statement {
 			ret = append(ret, vexDoc.Statements[i])
 		}
 	}
-	SortStatements(ret, *vexDoc.Timestamp)
+	var t time.Time
+	if vexDoc.Timestamp != nil {
+		t = *vexDoc.Timestamp
+	}
+	SortStatements(ret, t)
 	return ret
 }
 
