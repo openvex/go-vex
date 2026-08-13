@@ -143,7 +143,10 @@ func unionIndexResults(results []map[*vex.Statement]struct{}) []*vex.Statement {
 		// if this is present in all lists, we're in
 		found = true
 		for i := range results[1:] {
-			if _, ok := results[i][s]; !ok {
+			// results[1:] is only used for its length; index the original slice,
+			// otherwise results[0] is compared against itself and the last filter
+			// is never checked at all.
+			if _, ok := results[i+1][s]; !ok {
 				found = false
 				break
 			}
