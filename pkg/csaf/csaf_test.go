@@ -4,6 +4,9 @@
 package csaf
 
 import (
+	"bytes"
+	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,6 +25,84 @@ func TestOpen(t *testing.T) {
 	require.Equal(t, "CSAFPID-0001", doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0])
 	require.Equal(t, "CVE-2009-4488", doc.Vulnerabilities[1].CVE)
 	require.Equal(t, "https://example.com/foo/v1.2.3/mitigation", doc.Vulnerabilities[1].Remediations[0].URL)
+}
+
+func TestToJSONPreservesModeledCSAFFields(t *testing.T) {
+	t.Parallel()
+
+	data := []byte(`{
+	  "document": {
+	    "category": "csaf_vex",
+	    "csaf_version": "2.0",
+	    "distribution": {
+	      "tlp": {
+	        "label": "WHITE"
+	      }
+	    },
+	    "publisher": {
+	      "category": "vendor",
+	      "name": "Example Company",
+	      "namespace": "https://psirt.example.com"
+	    },
+	    "title": "Example VEX Document",
+	    "tracking": {
+	      "current_release_date": "2026-05-26T00:00:00Z",
+	      "id": "EXAMPLE-2026-001",
+	      "initial_release_date": "2026-05-26T00:00:00Z"
+	    }
+	  },
+	  "product_tree": {},
+	  "vulnerabilities": [
+	    {
+	      "cve": "CVE-2026-46598",
+	      "title": "Example vulnerability",
+	      "product_status": {
+	        "last_affected": [
+	          "CSAFPID-0001"
+	        ]
+	      }
+	    }
+	  ]
+	}`)
+
+	doc := &CSAF{}
+	require.NoError(t, json.Unmarshal(data, doc))
+
+	var output bytes.Buffer
+	require.NoError(t, doc.ToJSON(&output))
+	require.JSONEq(t, string(data), output.String())
+}
+
+func TestGoldenCSAFRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	inputData, err := os.ReadFile("testdata/product-statuses.json")
+	require.NoError(t, err)
+
+	doc, err := Open("testdata/product-statuses.json")
+	require.NoError(t, err)
+	require.NoError(t, doc.ValidateProductStatuses())
+
+	require.Equal(t, "csaf_vex", doc.Document.Category)
+	require.Equal(t, "2.0", doc.Document.CSAFVersion)
+	tlp, ok := doc.Document.Distribution["tlp"].(map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "WHITE", tlp["label"])
+	require.Equal(t, "go-vex-test", doc.Document.Tracking.Generator.Engine.Name)
+	require.Equal(t, "Example vulnerability covering CSAF product statuses", doc.Vulnerabilities[0].Title)
+
+	for _, status := range ProductStatusNames() {
+		require.NotEmpty(t, doc.Vulnerabilities[0].ProductStatus[status], status)
+	}
+
+	var output bytes.Buffer
+	require.NoError(t, doc.ToJSON(&output))
+
+	roundTrip := &CSAF{}
+	require.NoError(t, json.Unmarshal(output.Bytes(), roundTrip))
+	require.NoError(t, roundTrip.ValidateProductStatuses())
+
+	require.JSONEq(t, string(inputData), output.String())
 }
 
 func TestOpenRHAdvisory(t *testing.T) {
