@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Tejolote
-        uses: kubernetes-sigs/release-actions/setup-tejolote@c130b4494862d330a1aa4de320076c666d0708da # v0.4.4
+        uses: kubernetes-sigs/release-actions/setup-tejolote@b5b8280a60e6e20607f77068011269b982c60971 # v0.4.5
 
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -37,22 +37,22 @@ jobs:
           cache: false
 
       - name: Setup bnd
-        uses: carabiner-dev/actions/install/bnd@36a39ef667efe7112df8b1a534a4e37f35fad6fd
+        uses: carabiner-dev/actions/install/bnd@32587e82f960d49b36101e8c45d1956e511965d3
 
       - name: Setup snappy
-        uses: carabiner-dev/actions/install/snappy@36a39ef667efe7112df8b1a534a4e37f35fad6fd
+        uses: carabiner-dev/actions/install/snappy@32587e82f960d49b36101e8c45d1956e511965d3
 
       - name: Setup unpack
-        uses: carabiner-dev/actions/install/unpack@36a39ef667efe7112df8b1a534a4e37f35fad6fd
+        uses: carabiner-dev/actions/install/unpack@32587e82f960d49b36101e8c45d1956e511965d3
 
       - name: Build Scorecard
-        uses: carabiner-dev/actions/_demo/scorecard@36a39ef667efe7112df8b1a534a4e37f35fad6fd
+        uses: carabiner-dev/actions/_demo/scorecard@32587e82f960d49b36101e8c45d1956e511965d3
 
       - name: Setup beaker
-        uses: carabiner-dev/actions/install/beaker@36a39ef667efe7112df8b1a534a4e37f35fad6fd
+        uses: carabiner-dev/actions/install/beaker@32587e82f960d49b36101e8c45d1956e511965d3
 
       - name: Setup vexflow
-        uses: carabiner-dev/actions/install/vexflow@36a39ef667efe7112df8b1a534a4e37f35fad6fd
+        uses: carabiner-dev/actions/install/vexflow@32587e82f960d49b36101e8c45d1956e511965d3
 
       - name: Generate SBOM
         run: |
@@ -123,7 +123,7 @@ jobs:
         id: attest-tests
 
       - name: "Run scanner"
-        uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2 # v2.3.8
+        uses: google/osv-scanner-action/osv-scanner-action@6e4298ebc4db23e847df9b2e2de2939d6f066c67 # v2.5.1
         continue-on-error: true
         with:
           scan-args: |-
@@ -153,7 +153,7 @@ jobs:
           name: attestations.jsonl
           path: attestations.jsonl
 
-      - uses: carabiner-dev/actions/ampel/verify@36a39ef667efe7112df8b1a534a4e37f35fad6fd
+      - uses: carabiner-dev/actions/ampel/verify@32587e82f960d49b36101e8c45d1956e511965d3
         name: Evaluate Compliance
         id: osps-baseline-check
         with:
