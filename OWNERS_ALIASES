@@ -1,0 +1,14 @@
+aliases:
+    govex-approvers:
+        - cpanato # Core active maintainer
+        - lumjjb # Core active maintainer
+        - macedogm # Core active maintainer
+        - puerco # Core active maintainer
+    govex-reviewers:
+        - cpanato # Core active maintainer
+        - luhring # Core maintainer
+        - lumjjb # Core active maintainer
+        - macedogm # Core active maintainer
+        - puerco # Core active maintainer
+        - rnjudge # Core maintainer
+        - wagoodman # Core maintainer
