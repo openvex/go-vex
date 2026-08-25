@@ -131,7 +131,7 @@ func SortDocuments(docs []*VEX) []*VEX {
 		if docs[i].Timestamp == nil {
 			return false
 		}
-		return docs[i].Timestamp.Before(*(docs[j].Timestamp))
+		return docs[i].Timestamp.Before(*docs[j].Timestamp)
 	})
 	return docs
 }
