@@ -21,7 +21,7 @@ func TestParse001(t *testing.T) {
 		expected  *VEX
 	}{
 		"normal": {
-			"testdata/v0.0.1.json",
+			testV001Path,
 			false,
 			&VEX{
 				Metadata: Metadata{

@@ -25,15 +25,15 @@ func TestEffectiveStatement(t *testing.T) {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: testCVE2014},
 						Timestamp:     &date1,
-						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Products:      []Product{{Component: Component{ID: testDebPkgPURL}}},
 						Status:        StatusNotAffected,
 					},
 				},
 			},
-			vulnID:         "CVE-2014-123456",
-			product:        "pkg:deb/pkg@1.0",
+			vulnID:         testCVE2014,
+			product:        testDebPkgPURL,
 			shouldNil:      false,
 			expectedDate:   &date1,
 			expectedStatus: StatusNotAffected,
@@ -42,21 +42,21 @@ func TestEffectiveStatement(t *testing.T) {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: testCVE2014},
 						Timestamp:     &date1,
-						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Products:      []Product{{Component: Component{ID: testDebPkgPURL}}},
 						Status:        StatusUnderInvestigation,
 					},
 					{
-						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: testCVE2014},
 						Timestamp:     &date2,
-						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Products:      []Product{{Component: Component{ID: testDebPkgPURL}}},
 						Status:        StatusNotAffected,
 					},
 				},
 			},
-			vulnID:         "CVE-2014-123456",
-			product:        "pkg:deb/pkg@1.0",
+			vulnID:         testCVE2014,
+			product:        testDebPkgPURL,
 			shouldNil:      false,
 			expectedDate:   &date2,
 			expectedStatus: StatusNotAffected,
@@ -65,21 +65,21 @@ func TestEffectiveStatement(t *testing.T) {
 			vexDoc: &VEX{
 				Statements: []Statement{
 					{
-						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: testCVE2014},
 						Timestamp:     &date1,
-						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Products:      []Product{{Component: Component{ID: testDebPkgPURL}}},
 						Status:        StatusUnderInvestigation,
 					},
 					{
-						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{Name: testCVE2014},
 						Timestamp:     &date2,
 						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@2.0"}}},
 						Status:        StatusNotAffected,
 					},
 				},
 			},
-			vulnID:         "CVE-2014-123456",
-			product:        "pkg:deb/pkg@1.0",
+			vulnID:         testCVE2014,
+			product:        testDebPkgPURL,
 			shouldNil:      false,
 			expectedDate:   &date1,
 			expectedStatus: StatusUnderInvestigation,
@@ -89,15 +89,15 @@ func TestEffectiveStatement(t *testing.T) {
 				Statements: []Statement{
 					{
 						Vulnerability: Vulnerability{
-							Name:    "CVE-2014-123456",
+							Name:    testCVE2014,
 							Aliases: []VulnerabilityID{"ghsa-92xj-mqp7-vmcj"},
 						},
 						Timestamp: &date1,
-						Products:  []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Products:  []Product{{Component: Component{ID: testDebPkgPURL}}},
 						Status:    StatusUnderInvestigation,
 					},
 					{
-						Vulnerability: Vulnerability{ID: "CVE-2014-123456"},
+						Vulnerability: Vulnerability{ID: testCVE2014},
 						Timestamp:     &date2,
 						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@2.0"}}},
 						Status:        StatusNotAffected,
@@ -105,7 +105,7 @@ func TestEffectiveStatement(t *testing.T) {
 				},
 			},
 			vulnID:         "ghsa-92xj-mqp7-vmcj",
-			product:        "pkg:deb/pkg@1.0",
+			product:        testDebPkgPURL,
 			shouldNil:      false,
 			expectedDate:   &date1,
 			expectedStatus: StatusUnderInvestigation,
@@ -287,26 +287,26 @@ func TestPurlMatches(t *testing.T) {
 		p2        string
 		mustMatch bool
 	}{
-		"same purl":         {"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", "pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", true},
-		"different type":    {"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", "pkg:rpm/wolfi/curl@8.1.2-r0?arch=x86_64", false},
-		"different ns":      {"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", "pkg:apk/alpine/curl@8.1.2-r0?arch=x86_64", false},
-		"different package": {"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", "pkg:apk/wolfi/bash@8.1.2-r0?arch=x86_64", false},
-		"different version": {"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", "pkg:apk/wolfi/bash@8.1.3-r0?arch=x86_64", false},
-		"p1 no qualifiers":  {"pkg:apk/wolfi/curl@8.1.2-r0", "pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", true},
-		"p2 no qualifiers":  {"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64", "pkg:apk/wolfi/curl@8.1.2-r0", false},
+		"same purl":         {testWolfiCurlPURL, testWolfiCurlPURL, true},
+		"different type":    {testWolfiCurlPURL, "pkg:rpm/wolfi/curl@8.1.2-r0?arch=x86_64", false},
+		"different ns":      {testWolfiCurlPURL, "pkg:apk/alpine/curl@8.1.2-r0?arch=x86_64", false},
+		"different package": {testWolfiCurlPURL, "pkg:apk/wolfi/bash@8.1.2-r0?arch=x86_64", false},
+		"different version": {testWolfiCurlPURL, "pkg:apk/wolfi/bash@8.1.3-r0?arch=x86_64", false},
+		"p1 no qualifiers":  {testWolfiCurlVersionPURL, testWolfiCurlPURL, true},
+		"p2 no qualifiers":  {testWolfiCurlPURL, testWolfiCurlVersionPURL, false},
 		"versionless": {
-			"pkg:oci/curl",
-			"pkg:oci/curl@sha256:47fed8868b46b060efb8699dc40e981a0c785650223e03602d8c4493fc75b68c",
+			testOCICurlPURL,
+			testOCICurlDigestPURL,
 			true,
 		},
 		"different qualifier": {
-			"pkg:oci/curl@sha256:47fed8868b46b060efb8699dc40e981a0c785650223e03602d8c4493fc75b68c?arch=amd64&os=linux",
-			"pkg:oci/curl@sha256:47fed8868b46b060efb8699dc40e981a0c785650223e03602d8c4493fc75b68c?arch=arm64&os=linux",
+			testOCICurlDigestPURL + "?arch=amd64&os=linux",
+			testOCICurlDigestPURL + "?arch=arm64&os=linux",
 			false,
 		},
 		"p2 more qualifiers": {
-			"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64",
-			"pkg:apk/wolfi/curl@8.1.2-r0?arch=x86_64&os=linux",
+			testWolfiCurlPURL,
+			testWolfiCurlPURL + "&os=linux",
 			true,
 		},
 	} {
@@ -329,22 +329,22 @@ func TestDocumentMatches(t *testing.T) {
 				Metadata: Metadata{Timestamp: &now},
 				Statements: []Statement{
 					{
-						Vulnerability: Vulnerability{ID: "CVE-2023-1255"},
+						Vulnerability: Vulnerability{ID: testCVE20231255},
 						Products: []Product{
 							{
 								Component: Component{
-									ID: "pkg:oci/alpine@sha256%3A124c7d2707904eea7431fffe91522a01e5a861a624ee31d03372cc1d138a3126",
+									ID: testAlpineOCIPURL,
 								},
 								Subcomponents: []Subcomponent{
-									// {Component: Component{ID: "pkg:apk/alpine/libcrypto3@3.0.8-r3"}},
+									// {Component: Component{ID: testLibcryptoPURL}},
 								},
 							},
 						},
 					},
 				},
 			},
-			product:       "pkg:oci/alpine@sha256%3A124c7d2707904eea7431fffe91522a01e5a861a624ee31d03372cc1d138a3126",
-			vulnerability: "CVE-2023-1255",
+			product:       testAlpineOCIPURL,
+			vulnerability: testCVE20231255,
 			mustMach:      true,
 			numMatches:    1,
 		},
