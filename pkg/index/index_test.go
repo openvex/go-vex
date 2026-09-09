@@ -104,6 +104,16 @@ func TestMatch(t *testing.T) {
 		{name: "test", filters: []FilterFunc{}, expectedLength: 0},
 		{name: "vuln", filters: []FilterFunc{WithVulnerability(&vex.Vulnerability{Name: "CVE-1234-56789"})}, expectedLength: 1},
 		{name: "vulnAlias", filters: []FilterFunc{WithVulnerability(&vex.Vulnerability{Name: "CVE-1234-56789", Aliases: []vex.VulnerabilityID{"GHE-1234-56789"}})}, expectedLength: 1},
+		// two filters that share no statement: CVE-1234-56789 is only on the first
+		// statement, npm:chido@1.2 only on the second, so the intersection is empty
+		{name: "disjointVulnAndProduct", filters: []FilterFunc{
+			WithVulnerability(&vex.Vulnerability{Name: "CVE-1234-56789"}),
+			WithProduct(&vex.Product{Component: vex.Component{Identifiers: map[vex.IdentifierType]string{vex.PURL: "oci:alpine@eb69e4dc450281ac1ac675e45cff08c8452241d4664b713ea9859902272536fa"}}}),
+		}, expectedLength: 0},
+		{name: "matchingVulnAndProduct", filters: []FilterFunc{
+			WithVulnerability(&vex.Vulnerability{Name: "CVE-9876-54321"}),
+			WithProduct(&vex.Product{Component: vex.Component{Identifiers: map[vex.IdentifierType]string{vex.PURL: "oci:alpine@eb69e4dc450281ac1ac675e45cff08c8452241d4664b713ea9859902272536fa"}}}),
+		}, expectedLength: 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
