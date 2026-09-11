@@ -18,7 +18,7 @@ jobs:
       id-token: write # needed for keyless signing
       contents: read
       actions: read # needed to download the SLSA source provenance
-    uses: carabiner-labs/actions/.github/workflows/osps-compliance.yaml@f4252411b8f59d3e74b708c9943d32786130d1b1 # main
+    uses: carabiner-labs/actions/.github/workflows/osps-compliance.yaml@af49ed81469a0d94f93cdd0d3a308054579d4649 # main
     with:
       branch: main
       slsa-source-workflow: SLSA Source
@@ -27,4 +27,4 @@ jobs:
     needs: attest
     permissions:
       attestations: write # needed to push the attestations to the GitHub store
-    uses: carabiner-labs/actions/.github/workflows/push-attestations.yaml@f4252411b8f59d3e74b708c9943d32786130d1b1 # main
+    uses: carabiner-labs/actions/.github/workflows/push-attestations.yaml@af49ed81469a0d94f93cdd0d3a308054579d4649 # main
