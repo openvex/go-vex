@@ -5,7 +5,13 @@
 name: OSPS Compliance
 
 on:
-  push:
+  # Run once the SLSA source provenance of the push exists, so the
+  # evaluation can include it.
+  workflow_run:
+    workflows:
+      - SLSA Source
+    types:
+      - completed
     branches:
       - "main"
   workflow_dispatch:
@@ -14,11 +20,13 @@ permissions: {}
 
 jobs:
   attest:
+    # Manual runs have no triggering workflow to check
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     permissions:
       id-token: write # needed for keyless signing
       contents: read
       actions: read # needed to download the SLSA source provenance
-    uses: carabiner-labs/actions/.github/workflows/osps-compliance.yaml@af49ed81469a0d94f93cdd0d3a308054579d4649 # main
+    uses: carabiner-labs/actions/.github/workflows/osps-compliance.yaml@59b96aa9dfd2435a5b22a87ebee6e8b8b1eb1d49 # main
     with:
       branch: main
       slsa-source-workflow: SLSA Source
@@ -27,4 +35,4 @@ jobs:
     needs: attest
     permissions:
       attestations: write # needed to push the attestations to the GitHub store
-    uses: carabiner-labs/actions/.github/workflows/push-attestations.yaml@af49ed81469a0d94f93cdd0d3a308054579d4649 # main
+    uses: carabiner-labs/actions/.github/workflows/push-attestations.yaml@59b96aa9dfd2435a5b22a87ebee6e8b8b1eb1d49 # main
