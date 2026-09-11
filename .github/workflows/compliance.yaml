@@ -5,7 +5,13 @@
 name: OSPS Compliance
 
 on:
-  push:
+  # Run once the SLSA source provenance of the push exists, so the
+  # evaluation can include it.
+  workflow_run:
+    workflows:
+      - SLSA Source
+    types:
+      - completed
     branches:
       - "main"
   workflow_dispatch:
@@ -14,6 +20,8 @@ permissions: {}
 
 jobs:
   attest:
+    # Manual runs have no triggering workflow to check
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     permissions:
       id-token: write # needed for keyless signing
       contents: read
