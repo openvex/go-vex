@@ -14,7 +14,7 @@ func TestEffectiveStatement(t *testing.T) {
 	date1 := time.Date(2023, 4, 17, 20, 34, 58, 0, time.UTC)
 	date2 := time.Date(2023, 4, 18, 20, 34, 58, 0, time.UTC)
 	for caseName, tc := range map[string]struct {
-		vexDoc         *VEX
+		vexDoc         *Document
 		vulnID         string
 		product        string
 		shouldNil      bool
@@ -22,7 +22,7 @@ func TestEffectiveStatement(t *testing.T) {
 		expectedStatus Status
 	}{
 		"Single statement": {
-			vexDoc: &VEX{
+			vexDoc: &Document{
 				Statements: []Statement{
 					{
 						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
@@ -39,7 +39,7 @@ func TestEffectiveStatement(t *testing.T) {
 			expectedStatus: StatusNotAffected,
 		},
 		"Two consecutive statemente": {
-			vexDoc: &VEX{
+			vexDoc: &Document{
 				Statements: []Statement{
 					{
 						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
@@ -62,7 +62,7 @@ func TestEffectiveStatement(t *testing.T) {
 			expectedStatus: StatusNotAffected,
 		},
 		"Different products": {
-			vexDoc: &VEX{
+			vexDoc: &Document{
 				Statements: []Statement{
 					{
 						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
@@ -85,7 +85,7 @@ func TestEffectiveStatement(t *testing.T) {
 			expectedStatus: StatusUnderInvestigation,
 		},
 		"Vulnerability aliases": {
-			vexDoc: &VEX{
+			vexDoc: &Document{
 				Statements: []Statement{
 					{
 						Vulnerability: Vulnerability{
@@ -122,10 +122,10 @@ func TestEffectiveStatement(t *testing.T) {
 	}
 }
 
-func genTestDoc(t *testing.T) VEX {
+func genTestDoc(t *testing.T) Document {
 	ts, err := time.Parse(time.RFC3339, "2022-12-22T16:36:43-05:00")
 	require.NoError(t, err)
-	return VEX{
+	return Document{
 		Metadata: Metadata{
 			Author:     "John Doe",
 			AuthorRole: "VEX Writer Extraordinaire",
@@ -170,15 +170,15 @@ func TestCanonicalHash(t *testing.T) {
 	require.NoError(t, err)
 
 	for i, tc := range []struct {
-		prepare   func(*VEX)
+		prepare   func(*Document)
 		expected  string
 		shouldErr bool
 	}{
 		// Default Expected
-		{func(_ *VEX) {}, goldenHash, false},
+		{func(_ *Document) {}, goldenHash, false},
 		// Adding a statement changes the hash
 		{
-			func(v *VEX) {
+			func(v *Document) {
 				v.Statements = append(v.Statements, Statement{
 					Vulnerability: Vulnerability{Name: "CVE-2010-543231"},
 					Products: []Product{
@@ -192,7 +192,7 @@ func TestCanonicalHash(t *testing.T) {
 		},
 		// Changing metadata should not change hash
 		{
-			func(v *VEX) {
+			func(v *Document) {
 				v.AuthorRole = "abc"
 				v.ID = "298347" // Mmhh...
 				v.Supplier = "Mr Supplier"
@@ -203,7 +203,7 @@ func TestCanonicalHash(t *testing.T) {
 		},
 		// Changing other statement metadata should not change the hash
 		{
-			func(v *VEX) {
+			func(v *Document) {
 				v.Statements[0].ActionStatement = "Action!"
 				v.Statements[0].StatusNotes = "Let's note somthn here"
 				v.Statements[0].ImpactStatement = "We evaded this CVE by a hair"
@@ -214,7 +214,7 @@ func TestCanonicalHash(t *testing.T) {
 		},
 		// Changing products changes the hash
 		{
-			func(v *VEX) {
+			func(v *Document) {
 				v.Statements[0].Products[0].ID = "cool router, bro"
 			},
 			"010aaeb3d6bf69c486e199a48ec40038ca347d2603142dd48d97937d8477fe37",
@@ -222,7 +222,7 @@ func TestCanonicalHash(t *testing.T) {
 		},
 		// Changing document time changes the hash
 		{
-			func(v *VEX) {
+			func(v *Document) {
 				v.Timestamp = &otherTS
 			},
 			"d585979c1cc06797d2486382b3fd5e95d3a9b416525c95c9fefcef9863a595c8",
@@ -230,7 +230,7 @@ func TestCanonicalHash(t *testing.T) {
 		},
 		// Same timestamp in statement as doc should not change the hash
 		{
-			func(v *VEX) {
+			func(v *Document) {
 				v.Statements[0].Timestamp = v.Timestamp
 			},
 			goldenHash,
@@ -238,7 +238,7 @@ func TestCanonicalHash(t *testing.T) {
 		},
 		// Nil document timestamp should return an error
 		{
-			func(v *VEX) {
+			func(v *Document) {
 				v.Timestamp = nil
 			},
 			"",
@@ -259,17 +259,17 @@ func TestCanonicalHash(t *testing.T) {
 
 func TestGenerateCanonicalID(t *testing.T) {
 	for _, tc := range []struct {
-		prepare    func(*VEX)
+		prepare    func(*Document)
 		expectedID string
 	}{
 		{
 			// Normal generation
-			prepare:    func(_ *VEX) {},
+			prepare:    func(_ *Document) {},
 			expectedID: "https://openvex.dev/docs/public/vex-8ed99017785c3b43219018c7c50353c031cdaaf1c7efc146c683b0ce57123cf6",
 		},
 		{
 			// Existing IDs should not be changed
-			prepare:    func(v *VEX) { v.ID = "VEX-ID-THAT-ALREADY-EXISTED" },
+			prepare:    func(v *Document) { v.ID = "VEX-ID-THAT-ALREADY-EXISTED" },
 			expectedID: "VEX-ID-THAT-ALREADY-EXISTED",
 		},
 	} {
@@ -317,7 +317,7 @@ func TestPurlMatches(t *testing.T) {
 func TestDocumentMatches(t *testing.T) {
 	now := time.Now()
 	for testCase, tc := range map[string]struct {
-		sut           *VEX
+		sut           *Document
 		product       string
 		vulnerability string
 		subcomponents []string
@@ -325,7 +325,7 @@ func TestDocumentMatches(t *testing.T) {
 		numMatches    int
 	}{
 		"regular match": {
-			sut: &VEX{
+			sut: &Document{
 				Metadata: Metadata{Timestamp: &now},
 				Statements: []Statement{
 					{
@@ -385,11 +385,11 @@ func TestExtractStatements(t *testing.T) {
 	var nilTime *time.Time
 	for _, tc := range []struct {
 		name     string
-		sut      *VEX
+		sut      *Document
 		validate func(*testing.T, []*Statement)
 	}{
 		{
-			"replace-all", &VEX{
+			"replace-all", &Document{
 				Metadata:   Metadata{Timestamp: &tm1, LastUpdated: &tm2},
 				Statements: []Statement{{Timestamp: nil, LastUpdated: nil}},
 			},
@@ -400,7 +400,7 @@ func TestExtractStatements(t *testing.T) {
 			},
 		},
 		{
-			"replace-ts", &VEX{
+			"replace-ts", &Document{
 				Metadata:   Metadata{Timestamp: &tm1, LastUpdated: &tm2},
 				Statements: []Statement{{Timestamp: nil, LastUpdated: &tm3}},
 			},
@@ -411,7 +411,7 @@ func TestExtractStatements(t *testing.T) {
 			},
 		},
 		{
-			"replace-lu", &VEX{
+			"replace-lu", &Document{
 				Metadata:   Metadata{Timestamp: &tm1, LastUpdated: &tm2},
 				Statements: []Statement{{Timestamp: &tm3, LastUpdated: nil}},
 			},
@@ -422,7 +422,7 @@ func TestExtractStatements(t *testing.T) {
 			},
 		},
 		{
-			"all-nil", &VEX{
+			"all-nil", &Document{
 				Metadata:   Metadata{Timestamp: nil, LastUpdated: nil},
 				Statements: []Statement{{Timestamp: nil, LastUpdated: nil}},
 			},
@@ -433,7 +433,7 @@ func TestExtractStatements(t *testing.T) {
 			},
 		},
 		{
-			"doc-nil", &VEX{
+			"doc-nil", &Document{
 				Metadata:   Metadata{Timestamp: nil, LastUpdated: nil},
 				Statements: []Statement{{Timestamp: &tm1, LastUpdated: &tm2}},
 			},

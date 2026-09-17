@@ -24,29 +24,29 @@ func TestMergeDocumentsWithOptions(t *testing.T) {
 
 	for _, tc := range []struct {
 		opts        *MergeOptions
-		docs        []*VEX
-		expectedDoc *VEX
+		docs        []*Document
+		expectedDoc *Document
 		shouldErr   bool
 	}{
 		// Zero docs should fail
 		{
 			opts:        &MergeOptions{},
-			docs:        []*VEX{},
-			expectedDoc: &VEX{},
+			docs:        []*Document{},
+			expectedDoc: &Document{},
 			shouldErr:   true,
 		},
 		// One doc results in the same doc
 		{
 			opts:        &MergeOptions{},
-			docs:        []*VEX{doc1},
+			docs:        []*Document{doc1},
 			expectedDoc: doc1,
 			shouldErr:   false,
 		},
 		// Two docs, as they are
 		{
 			opts: &MergeOptions{},
-			docs: []*VEX{doc1, doc2},
-			expectedDoc: &VEX{
+			docs: []*Document{doc1, doc2},
+			expectedDoc: &Document{
 				Metadata: Metadata{},
 				Statements: []Statement{
 					doc1.Statements[0],
@@ -60,8 +60,8 @@ func TestMergeDocumentsWithOptions(t *testing.T) {
 			opts: &MergeOptions{
 				Products: []string{"pkg:apk/wolfi/git@2.41.0-1"},
 			},
-			docs: []*VEX{doc3, doc4},
-			expectedDoc: &VEX{
+			docs: []*Document{doc3, doc4},
+			expectedDoc: &Document{
 				Metadata: Metadata{},
 				Statements: []Statement{
 					doc4.Statements[0],
@@ -74,8 +74,8 @@ func TestMergeDocumentsWithOptions(t *testing.T) {
 			opts: &MergeOptions{
 				Vulnerabilities: []string{"CVE-9876-54321"},
 			},
-			docs: []*VEX{doc3, doc4},
-			expectedDoc: &VEX{
+			docs: []*Document{doc3, doc4},
+			expectedDoc: &Document{
 				Metadata: Metadata{},
 				Statements: []Statement{
 					doc3.Statements[0],
