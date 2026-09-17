@@ -7,13 +7,14 @@ package vex
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -216,91 +217,123 @@ func (vexDoc *VEX) Matches(vulnID, product string, subcomponents []string) []Sta
 // expressed in it. This hash should be constant as long as the impact
 // statements are not modified. Changes in extra information and metadata
 // will not alter the hash.
+//
+// Note that CanonicalHash sorts the document's statements in place.
 func (vexDoc *VEX) CanonicalHash() (string, error) {
 	// Here's the algo:
 
 	if vexDoc.Timestamp == nil {
 		return "", errors.New("document timestamp is required to compute canonical hash")
 	}
+	docUnix := strconv.FormatInt(vexDoc.Timestamp.Unix(), 10)
+
+	// The canonicalization string is accumulated in a single builder so the
+	// cost stays linear in the size of the document. Only the per-product
+	// fragments are materialized as strings because they need to be sorted.
+	var cs strings.Builder
 
 	// 1. Start with the document date. In unixtime to avoid format variance.
-	cString := fmt.Sprintf("%d", vexDoc.Timestamp.Unix())
+	cs.WriteString(docUnix)
 
 	// 2. Document version
-	cString += fmt.Sprintf(":%d", vexDoc.Version)
+	cs.WriteString(":")
+	cs.WriteString(strconv.Itoa(vexDoc.Version))
 
 	// 3. Author identity
-	cString += fmt.Sprintf(":%s", vexDoc.Author)
+	cs.WriteString(":")
+	cs.WriteString(vexDoc.Author)
 
 	// 4. Sort the statements
 	stmts := vexDoc.Statements
 	SortStatements(stmts, *vexDoc.Timestamp)
 
 	// 5. Now add the data from each statement
-	//nolint:gocritic
-	for _, s := range stmts {
+	var prod strings.Builder
+	var prods []string
+	for i := range stmts {
+		s := &stmts[i]
 		// 5a. Vulnerability
-		cString += cstringFromVulnerability(s.Vulnerability)
+		writeVulnerabilityCString(&cs, &s.Vulnerability)
 		// 5b. Status + Justification
-		cString += fmt.Sprintf(":%s:%s", s.Status, s.Justification)
+		cs.WriteString(":")
+		cs.WriteString(string(s.Status))
+		cs.WriteString(":")
+		cs.WriteString(string(s.Justification))
 		// 5c. Statement time, in unixtime. If it exists, if not the doc's
+		cs.WriteString(":")
 		if s.Timestamp != nil {
-			cString += fmt.Sprintf(":%d", s.Timestamp.Unix())
+			cs.WriteString(strconv.FormatInt(s.Timestamp.Unix(), 10))
 		} else {
-			cString += fmt.Sprintf(":%d", vexDoc.Timestamp.Unix())
+			cs.WriteString(docUnix)
 		}
 		// 5d. Sorted product strings
-		prods := []string{}
-		for _, p := range s.Products {
-			prodString := cstringFromComponent(p.Component)
-			if len(p.Subcomponents) > 0 {
-				for _, sc := range p.Subcomponents {
-					prodString += cstringFromComponent(sc.Component)
-				}
+		prods = prods[:0]
+		for j := range s.Products {
+			p := &s.Products[j]
+			prod.Reset()
+			writeComponentCString(&prod, &p.Component)
+			for k := range p.Subcomponents {
+				writeComponentCString(&prod, &p.Subcomponents[k].Component)
 			}
-			prods = append(prods, prodString)
+			prods = append(prods, prod.String())
 		}
-		sort.Strings(prods)
-		cString += strings.Join(prods, ":")
+		slices.Sort(prods)
+		for j, ps := range prods {
+			if j > 0 {
+				cs.WriteString(":")
+			}
+			cs.WriteString(ps)
+		}
 	}
 
 	// 6. Hash the string in sha256 and return
-	h := sha256.New()
-	if _, err := h.Write([]byte(cString)); err != nil {
-		return "", fmt.Errorf("hashing canonicalization string: %w", err)
-	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil
+	sum := sha256.Sum256([]byte(cs.String()))
+	return hex.EncodeToString(sum[:]), nil
 }
 
-// cstringFromComponent returns a string concatenating the data of a component
+// writeComponentCString writes a string concatenating the data of a component
 // this internal function is meant to generate a predicatable string to generate
 // the document's CanonicalHash
-func cstringFromComponent(c Component) string {
-	s := fmt.Sprintf(":%s", c.ID)
+func writeComponentCString(w *strings.Builder, c *Component) {
+	w.WriteString(":")
+	w.WriteString(c.ID)
 
 	for algo, val := range c.Hashes {
-		s += fmt.Sprintf(":%s@%s", algo, val)
+		w.WriteString(":")
+		w.WriteString(string(algo))
+		w.WriteString("@")
+		w.WriteString(string(val))
 	}
 
 	for t, id := range c.Identifiers {
-		s += fmt.Sprintf(":%s@%s", t, id)
+		w.WriteString(":")
+		w.WriteString(string(t))
+		w.WriteString("@")
+		w.WriteString(id)
 	}
-
-	return s
 }
 
-// cstringFromVulnerability returns a string concatenating the vulnerability
+// writeVulnerabilityCString writes a string concatenating the vulnerability
 // elements into a reproducible string that can be used to hash or index the
 // vulnerability data or the statement.
-func cstringFromVulnerability(v Vulnerability) string {
-	cString := fmt.Sprintf(":%s:%s", v.ID, v.Name)
-	list := make([]string, 0, len(v.Aliases))
+func writeVulnerabilityCString(w *strings.Builder, v *Vulnerability) {
+	w.WriteString(":")
+	w.WriteString(v.ID)
+	w.WriteString(":")
+	w.WriteString(string(v.Name))
+	w.WriteString(":")
+
+	aliases := make([]string, 0, len(v.Aliases))
 	for i := range v.Aliases {
-		list = append(list, string(v.Aliases[i]))
+		aliases = append(aliases, string(v.Aliases[i]))
 	}
-	sort.Strings(list)
-	cString += fmt.Sprintf(":%s", strings.Join(list, ":"))
-	return cString
+	slices.Sort(aliases)
+	for i, a := range aliases {
+		if i > 0 {
+			w.WriteString(":")
+		}
+		w.WriteString(a)
+	}
 }
 
 // GenerateCanonicalID generates an ID for the document. The ID will be
