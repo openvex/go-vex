@@ -17,9 +17,9 @@ import (
 	"github.com/openvex/go-vex/pkg/csaf"
 )
 
-// Load reads the VEX document file at the given path and returns a decoded VEX
-// object. If Load is unable to read the file or decode the document, it returns
-// an error.
+// Load reads the VEX document file at the given path and returns a decoded
+// Document. If Load is unable to read the file or decode the document, it
+// returns an error.
 func Load(path string) (*Document, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {

@@ -28,7 +28,7 @@ var errNoResolver = errors.New("OCI purl has no digest and no ImageDigestResolve
 
 // importProductsStrict walks every product in doc and appends a corresponding
 // in-toto subject to att, aborting on the first per-product failure.
-func importProductsStrict(att *Attestation, doc *vex.VEX, resolver ImageDigestResolver) error {
+func importProductsStrict(att *Attestation, doc *vex.Document, resolver ImageDigestResolver) error {
 	var firstErr error
 	walkProductsForImport(att, doc, resolver, func(err error) bool {
 		firstErr = err
@@ -39,7 +39,7 @@ func importProductsStrict(att *Attestation, doc *vex.VEX, resolver ImageDigestRe
 
 // importProductsBestEffort is the lenient counterpart to importProductsStrict:
 // failures resolving individual products are logged via slog and skipped.
-func importProductsBestEffort(att *Attestation, doc *vex.VEX, resolver ImageDigestResolver) {
+func importProductsBestEffort(att *Attestation, doc *vex.Document, resolver ImageDigestResolver) {
 	walkProductsForImport(att, doc, resolver, func(err error) bool {
 		slog.Warn("skipping product in attestation subjects", "error", err.Error())
 		return true
@@ -61,7 +61,7 @@ func importProductsBestEffort(att *Attestation, doc *vex.VEX, resolver ImageDige
 //
 // onError is invoked for each per-product failure; if it returns false,
 // iteration stops.
-func walkProductsForImport(att *Attestation, doc *vex.VEX, resolver ImageDigestResolver, onError func(error) bool) {
+func walkProductsForImport(att *Attestation, doc *vex.Document, resolver ImageDigestResolver, onError func(error) bool) {
 	if doc == nil {
 		return
 	}

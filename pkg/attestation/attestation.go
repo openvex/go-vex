@@ -48,7 +48,7 @@ type buildOpts struct {
 
 // WithPredicate builds a Predicate from doc and sets it on the attestation.
 // If doc is nil, a default empty VEX document is used.
-func WithPredicate(doc *vex.VEX) Option {
+func WithPredicate(doc *vex.Document) Option {
 	return func(o *buildOpts) error {
 		o.predicate = NewPredicate(doc)
 		return nil
