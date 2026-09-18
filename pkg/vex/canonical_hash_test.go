@@ -14,8 +14,8 @@ import (
 // canonicalHashFixture returns a document exercising every field that feeds
 // CanonicalHash: doc metadata, statement timestamps (present and inherited),
 // vulnerability aliases, multiple products with hashes, identifiers and
-// subcomponents. Components carry at most one hash and one identifier so the
-// result does not depend on map iteration order.
+// subcomponents. The first product carries several hashes and identifiers so
+// the fixture also pins the ordering of those two maps.
 func canonicalHashFixture(n int) *Document {
 	docTS := time.Date(2024, 3, 1, 12, 0, 0, 0, time.UTC)
 	doc := &Document{
@@ -37,9 +37,18 @@ func canonicalHashFixture(n int) *Document {
 			Products: []Product{
 				{
 					Component: Component{
-						ID:          "pkg:oci/zeta@sha256:beef",
-						Hashes:      map[Algorithm]Hash{SHA256: "beef"},
-						Identifiers: map[IdentifierType]string{PURL: "pkg:oci/zeta@sha256:beef"},
+						ID: "pkg:oci/zeta@sha256:beef",
+						Hashes: map[Algorithm]Hash{
+							SHA256: "beef",
+							SHA512: "feed",
+							SHA1:   "dead",
+							MD5:    "f00d",
+						},
+						Identifiers: map[IdentifierType]string{
+							PURL:  "pkg:oci/zeta@sha256:beef",
+							CPE22: "cpe:/a:example:zeta:1.0",
+							CPE23: "cpe:2.3:a:example:zeta:1.0:*:*:*:*:*:*:*",
+						},
 					},
 					Subcomponents: []Subcomponent{
 						{Component: Component{ID: "pkg:apk/wolfi/libz@1.3"}},
@@ -68,8 +77,8 @@ func TestCanonicalHashFixture(t *testing.T) {
 		want string
 	}{
 		{"empty", 0, "2ceca891f56cc74b5c8b10e59d0cb0eec2863c14bd6d3dc1e8d5257c8892a44c"},
-		{"one", 1, "3271817c8ce125c34c506753e45306ed56ab6e154c1bff47f13eae6d5e4407e5"},
-		{"many", 7, "395f0269c1586deefc920f0dc876cd0690dc3bbd50854bf2c76dfb2e6638c607"},
+		{"one", 1, "59a72080a4c3da8c0f5d288ca88d9982b83fb07428c178a3ee3673ea0458f176"},
+		{"many", 7, "63c0308a20a58205b89063c4cfa30eb8f7f2e6bd501736f56c6c578df240578d"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
@@ -78,10 +87,15 @@ func TestCanonicalHashFixture(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, tc.want, got)
 
-			// Hashing again must be stable.
-			again, err := doc.CanonicalHash()
-			require.NoError(t, err)
-			require.Equal(t, got, again)
+			// Hashing again must be stable. Repeat enough times that a
+			// map walked in its native order would show up: the component
+			// in the fixture has 4 hashes and 3 identifiers, so there are
+			// 144 orderings to fall into.
+			for range 100 {
+				again, err := doc.CanonicalHash()
+				require.NoError(t, err)
+				require.Equal(t, got, again)
+			}
 		})
 	}
 
