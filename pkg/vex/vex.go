@@ -304,18 +304,31 @@ func writeComponentCString(w *strings.Builder, c *Component) {
 	w.WriteString(":")
 	w.WriteString(c.ID)
 
-	for algo, val := range c.Hashes {
+	// Map iteration order is not defined, so both maps are walked in sorted
+	// key order. Without this the same component produces a different string
+	// on every run as soon as it carries more than one hash or identifier.
+	algos := make([]Algorithm, 0, len(c.Hashes))
+	for algo := range c.Hashes {
+		algos = append(algos, algo)
+	}
+	slices.Sort(algos)
+	for _, algo := range algos {
 		w.WriteString(":")
 		w.WriteString(string(algo))
 		w.WriteString("@")
-		w.WriteString(string(val))
+		w.WriteString(string(c.Hashes[algo]))
 	}
 
-	for t, id := range c.Identifiers {
+	idTypes := make([]IdentifierType, 0, len(c.Identifiers))
+	for t := range c.Identifiers {
+		idTypes = append(idTypes, t)
+	}
+	slices.Sort(idTypes)
+	for _, t := range idTypes {
 		w.WriteString(":")
 		w.WriteString(string(t))
 		w.WriteString("@")
-		w.WriteString(id)
+		w.WriteString(c.Identifiers[t])
 	}
 }
 
