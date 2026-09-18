@@ -24,9 +24,9 @@ func failResolver(t *testing.T) ImageDigestResolver {
 	})
 }
 
-func vexWithProducts(prods ...vex.Product) vex.VEX {
+func vexWithProducts(prods ...vex.Product) vex.Document {
 	ts := time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)
-	return vex.VEX{
+	return vex.Document{
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/import",
@@ -203,7 +203,7 @@ func TestImportDedupesAcrossStatements(t *testing.T) {
 			},
 		}
 	}
-	doc := vex.VEX{
+	doc := vex.Document{
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/dup",
@@ -241,7 +241,7 @@ func TestNewBestEffortSkipsOnResolverFailure(t *testing.T) {
 	})
 
 	ts := time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)
-	doc := vex.VEX{
+	doc := vex.Document{
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/skip",

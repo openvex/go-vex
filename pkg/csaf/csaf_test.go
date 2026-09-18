@@ -9,6 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// CSAF must remain interchangeable with Document while the alias exists.
+var (
+	_ *Document = (*CSAF)(nil)
+	_ *CSAF     = (*Document)(nil)
+)
+
 func TestOpen(t *testing.T) {
 	doc, err := Open("testdata/csaf.json")
 	require.NoError(t, err)

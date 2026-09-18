@@ -17,9 +17,9 @@ import (
 )
 
 // newTestVEX returns a VEX document with a fixed timestamp for deterministic tests.
-func newTestVEX() vex.VEX {
+func newTestVEX() vex.Document {
 	ts := time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)
-	return vex.VEX{
+	return vex.Document{
 		Metadata: vex.Metadata{
 			Context:   vex.ContextLocator(),
 			ID:        "https://openvex.dev/docs/test/vex-001",

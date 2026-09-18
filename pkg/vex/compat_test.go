@@ -12,18 +12,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// VEX must remain interchangeable with Document while the alias exists.
+var (
+	_ *Document = (*VEX)(nil)
+	_ *VEX      = (*Document)(nil)
+)
+
 func TestParse001(t *testing.T) {
 	d, err := time.Parse(time.RFC3339, "2023-01-08T18:02:03.647787998-06:00")
 	require.NoError(t, err)
 	for msg, tc := range map[string]struct {
 		path      string
 		shouldErr bool
-		expected  *VEX
+		expected  *Document
 	}{
 		"normal": {
 			"testdata/v0.0.1.json",
 			false,
-			&VEX{
+			&Document{
 				Metadata: Metadata{
 					Context:    "https://openvex.dev/ns/v" + SpecVersion,
 					ID:         "https://openvex.dev/docs/example/vex-9fb3463de1b57",

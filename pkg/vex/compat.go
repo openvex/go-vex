@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type legacyParser func([]byte) (*VEX, error)
+type legacyParser func([]byte) (*Document, error)
 
 // getLegacyVersionParser returns a parser that can read older OpenVEX formats. The
 // project will have a version skew policy and try to support older versions
@@ -26,7 +26,7 @@ func getLegacyVersionParser(version string) legacyParser {
 	}
 }
 
-var parse001 = func(data []byte) (*VEX, error) {
+var parse001 = func(data []byte) (*Document, error) {
 	oldVex := &vex001{}
 
 	if err := json.Unmarshal(data, oldVex); err != nil {

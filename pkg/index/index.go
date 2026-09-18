@@ -24,7 +24,7 @@ func New(funcs ...constructorFunc) (*StatementIndex, error) {
 type constructorFunc func(*StatementIndex) error
 
 // WithDocument adds all the statements in a document to the index
-func WithDocument(doc *vex.VEX) constructorFunc {
+func WithDocument(doc *vex.Document) constructorFunc {
 	return func(si *StatementIndex) error {
 		statements := make([]*vex.Statement, 0, len(doc.Statements))
 		for i := range doc.Statements {

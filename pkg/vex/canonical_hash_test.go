@@ -16,9 +16,9 @@ import (
 // vulnerability aliases, multiple products with hashes, identifiers and
 // subcomponents. Components carry at most one hash and one identifier so the
 // result does not depend on map iteration order.
-func canonicalHashFixture(n int) *VEX {
+func canonicalHashFixture(n int) *Document {
 	docTS := time.Date(2024, 3, 1, 12, 0, 0, 0, time.UTC)
-	doc := &VEX{
+	doc := &Document{
 		Metadata: Metadata{
 			Author:    "Test Author",
 			Version:   3,

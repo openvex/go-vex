@@ -21,13 +21,13 @@ type MergeOptions struct {
 
 // MergeDocuments is a convenience wrapper over MergeDocumentsWithOptions
 // that does not take options.
-func MergeDocuments(docs []*VEX) (*VEX, error) {
+func MergeDocuments(docs []*Document) (*Document, error) {
 	return MergeDocumentsWithOptions(&MergeOptions{}, docs)
 }
 
 // Merge combines the statements from a number of documents into
 // a new one, preserving time context from each of them.
-func MergeDocumentsWithOptions(mergeOpts *MergeOptions, docs []*VEX) (*VEX, error) {
+func MergeDocumentsWithOptions(mergeOpts *MergeOptions, docs []*Document) (*Document, error) {
 	if len(docs) == 0 {
 		return nil, fmt.Errorf("at least one vex document is required to merge")
 	}
@@ -123,7 +123,7 @@ func MergeDocumentsWithOptions(mergeOpts *MergeOptions, docs []*VEX) (*VEX, erro
 // SortDocuments sorts and returns a slice of documents based on their date.
 // VEXes should be applied sequentially in chronological order as they capture
 // knowledge about an artifact as it changes over time.
-func SortDocuments(docs []*VEX) []*VEX {
+func SortDocuments(docs []*Document) []*Document {
 	sort.Slice(docs, func(i, j int) bool {
 		if docs[j].Timestamp == nil {
 			return true

@@ -17,10 +17,10 @@ import (
 	"github.com/openvex/go-vex/pkg/csaf"
 )
 
-// Load reads the VEX document file at the given path and returns a decoded VEX
-// object. If Load is unable to read the file or decode the document, it returns
-// an error.
-func Load(path string) (*VEX, error) {
+// Load reads the VEX document file at the given path and returns a decoded
+// Document. If Load is unable to read the file or decode the document, it
+// returns an error.
+func Load(path string) (*Document, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("loading VEX file: %w", err)
@@ -30,8 +30,8 @@ func Load(path string) (*VEX, error) {
 }
 
 // Parse parses an OpenVEX document in the latest version from the data byte array.
-func Parse(data []byte) (*VEX, error) {
-	vexDoc := &VEX{}
+func Parse(data []byte) (*Document, error) {
+	vexDoc := &Document{}
 	if err := json.Unmarshal(data, vexDoc); err != nil {
 		return nil, fmt.Errorf("%s: %w", errMsgParse, err)
 	}
@@ -39,7 +39,7 @@ func Parse(data []byte) (*VEX, error) {
 }
 
 // OpenYAML opens a VEX file in YAML format.
-func OpenYAML(path string) (*VEX, error) {
+func OpenYAML(path string) (*Document, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("opening YAML file: %w", err)
@@ -52,7 +52,7 @@ func OpenYAML(path string) (*VEX, error) {
 }
 
 // OpenJSON opens an OpenVEX file in JSON format.
-func OpenJSON(path string) (*VEX, error) {
+func OpenJSON(path string) (*Document, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("opening JSON file: %w", err)
@@ -81,7 +81,7 @@ func parseContext(rawDoc []byte) (string, error) {
 }
 
 // Open tries to autodetect the vex format and open it
-func Open(path string) (*VEX, error) {
+func Open(path string) (*Document, error) {
 	data, err := os.ReadFile(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
@@ -129,8 +129,8 @@ func Open(path string) (*VEX, error) {
 	return nil, fmt.Errorf("unable to detect document format reading %s", path)
 }
 
-// OpenCSAF opens a CSAF document and builds a VEX object from it.
-func OpenCSAF(path string, products []string) (*VEX, error) {
+// OpenCSAF opens a CSAF document and builds a VEX Document from it.
+func OpenCSAF(path string, products []string) (*Document, error) {
 	csafDoc, err := csaf.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("opening csaf doc: %w", err)
@@ -165,7 +165,7 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 	}
 
 	// Create the vex doc
-	v := &VEX{
+	v := &Document{
 		Metadata: Metadata{
 			ID:         csafDoc.Document.Tracking.ID,
 			Author:     "",
@@ -219,8 +219,8 @@ func OpenCSAF(path string, products []string) (*VEX, error) {
 
 // MergeFilesWithOptions opens a list of vex documents and after parsing them
 // merges them into a single file using the specified merge options.
-func MergeFilesWithOptions(mergeOpts *MergeOptions, filePaths []string) (*VEX, error) {
-	vexDocs := []*VEX{}
+func MergeFilesWithOptions(mergeOpts *MergeOptions, filePaths []string) (*Document, error) {
+	vexDocs := []*Document{}
 	for i := range filePaths {
 		doc, err := Open(filePaths[i])
 		if err != nil {
@@ -237,6 +237,6 @@ func MergeFilesWithOptions(mergeOpts *MergeOptions, filePaths []string) (*VEX, e
 
 // MergeFiles is a convenience wrapper around MergeFilesWithOptions that
 // does not take options but performs the merge using the default options
-func MergeFiles(filePaths []string) (*VEX, error) {
+func MergeFiles(filePaths []string) (*Document, error) {
 	return MergeFilesWithOptions(&MergeOptions{}, filePaths)
 }

@@ -55,11 +55,17 @@ const (
 // documents and nodes. It is set to the OpenVEX public namespace by default.
 var DefaultNamespace = PublicNamespace
 
-// The VEX type represents a VEX document and all of its contained information.
-type VEX struct {
+// Document represents a VEX document and all of its contained information.
+type Document struct {
 	Metadata
 	Statements []Statement `json:"statements"`
 }
+
+// VEX is an alias of [Document], kept for backwards compatibility with code
+// written before the type was renamed. New code should use Document.
+//
+// See https://github.com/openvex/go-vex/issues/8
+type VEX = Document
 
 // The Metadata type represents the metadata associated with a VEX document.
 type Metadata struct {
@@ -101,7 +107,7 @@ type Metadata struct {
 }
 
 // New returns a new, initialized VEX document.
-func New() VEX {
+func New() Document {
 	now := time.Now()
 	t, err := DateFromEnv()
 	if err != nil {
@@ -110,7 +116,7 @@ func New() VEX {
 	if t != nil {
 		now = *t
 	}
-	return VEX{
+	return Document{
 		Metadata: Metadata{
 			Context:    ContextLocator(),
 			Author:     DefaultAuthor,
@@ -123,7 +129,7 @@ func New() VEX {
 }
 
 // ToJSON serializes the VEX document to JSON and writes it to the passed writer.
-func (vexDoc *VEX) ToJSON(w io.Writer) error {
+func (vexDoc *Document) ToJSON(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	enc.SetEscapeHTML(false)
@@ -136,8 +142,8 @@ func (vexDoc *VEX) ToJSON(w io.Writer) error {
 
 // MarshalJSON the document object overrides its marshaling function to normalize
 // the timezones in all dates to Zulu.
-func (vexDoc *VEX) MarshalJSON() ([]byte, error) {
-	type alias VEX
+func (vexDoc *Document) MarshalJSON() ([]byte, error) {
+	type alias Document
 	var ts, lu string
 
 	if vexDoc.Timestamp != nil {
@@ -161,7 +167,7 @@ func (vexDoc *VEX) MarshalJSON() ([]byte, error) {
 // EffectiveStatement returns the latest VEX statement for a given product and
 // vulnerability, that is the statement that contains the latest data about
 // impact to a given product.
-func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
+func (vexDoc *Document) EffectiveStatement(product, vulnID string) (s *Statement) {
 	statements := vexDoc.Statements
 	var t time.Time
 	if vexDoc.Timestamp != nil {
@@ -181,7 +187,7 @@ func (vexDoc *VEX) EffectiveStatement(product, vulnID string) (s *Statement) {
 // StatementFromID returns a statement for a given vulnerability if there is one.
 //
 // Deprecated: vex.StatementFromID is deprecated and will be removed in an upcoming version
-func (vexDoc *VEX) StatementFromID(id string) *Statement {
+func (vexDoc *Document) StatementFromID(id string) *Statement {
 	slog.Warn("vex.StatementFromID is deprecated and will be removed in an upcoming version")
 	for i := range vexDoc.Statements {
 		if string(vexDoc.Statements[i].Vulnerability.Name) == id && len(vexDoc.Statements[i].Products) > 0 {
@@ -194,7 +200,7 @@ func (vexDoc *VEX) StatementFromID(id string) *Statement {
 // Matches returns the latest VEX statement for a given product and
 // vulnerability. That is, the statement that contains the latest data with
 // impact data of a vulnerability on a given product.
-func (vexDoc *VEX) Matches(vulnID, product string, subcomponents []string) []Statement {
+func (vexDoc *Document) Matches(vulnID, product string, subcomponents []string) []Statement {
 	statements := vexDoc.Statements
 	var t time.Time
 	if vexDoc.Timestamp != nil {
@@ -219,7 +225,7 @@ func (vexDoc *VEX) Matches(vulnID, product string, subcomponents []string) []Sta
 // will not alter the hash.
 //
 // Note that CanonicalHash sorts the document's statements in place.
-func (vexDoc *VEX) CanonicalHash() (string, error) {
+func (vexDoc *Document) CanonicalHash() (string, error) {
 	// Here's the algo:
 
 	if vexDoc.Timestamp == nil {
@@ -341,7 +347,7 @@ func writeVulnerabilityCString(w *strings.Builder, v *Vulnerability) {
 // with the same impact statements will always get the same ID.
 // Trying to generate the id of a doc with an existing ID will
 // not do anything.
-func (vexDoc *VEX) GenerateCanonicalID() (string, error) {
+func (vexDoc *Document) GenerateCanonicalID() (string, error) {
 	if vexDoc.ID != "" {
 		return vexDoc.ID, nil
 	}
@@ -441,7 +447,7 @@ func PurlMatches(purl1, purl2 string) bool {
 // StatementsByVulnerability returns a list of statements that apply to a
 // vulnerability ID. These are guaranteed to be ordered according to the VEX
 // history.
-func (vexDoc *VEX) StatementsByVulnerability(id string) []Statement {
+func (vexDoc *Document) StatementsByVulnerability(id string) []Statement {
 	ret := []Statement{}
 	for i := range vexDoc.Statements {
 		if vexDoc.Statements[i].Vulnerability.Matches(id) {
@@ -458,7 +464,7 @@ func (vexDoc *VEX) StatementsByVulnerability(id string) []Statement {
 
 // ExtractStatements extracts the statements from the document with the dates
 // inherited from the encapsuling doc to make them stand alone.
-func (vexDoc *VEX) ExtractStatements() []*Statement {
+func (vexDoc *Document) ExtractStatements() []*Statement {
 	ret := make([]*Statement, 0, len(vexDoc.Statements))
 
 	// Cycle the VEX statements, copy each and complete the dates

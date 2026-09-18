@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-// CSAF is a Common Security Advisory Framework Version 2.0 document.
+// Document is a Common Security Advisory Framework Version 2.0 document.
 //
 // https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html
-type CSAF struct {
+type Document struct {
 	// Document contains metadata about the CSAF document itself.
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321-document-property
@@ -34,6 +34,12 @@ type CSAF struct {
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3217-document-property---notes
 	Notes []Note `json:"notes"`
 }
+
+// CSAF is an alias of [Document], kept for backwards compatibility with code
+// written before the type was renamed. New code should use Document.
+//
+// See https://github.com/openvex/go-vex/issues/8
+type CSAF = Document
 
 // DocumentMetadata contains metadata about the CSAF document itself.
 //
@@ -264,14 +270,14 @@ type CVSSV3 struct {
 
 // Open reads and parses a given file path and returns a CSAF document
 // or an error if the file could not be opened or parsed.
-func Open(path string) (*CSAF, error) {
+func Open(path string) (*Document, error) {
 	fh, err := os.Open(path) //nolint:gosec // This is supposed to open user-specified paths
 	if err != nil {
 		return nil, fmt.Errorf("csaf: failed to open document: %w", err)
 	}
 	defer fh.Close() //nolint:errcheck
 
-	csafDoc := &CSAF{}
+	csafDoc := &Document{}
 	err = json.NewDecoder(fh).Decode(csafDoc)
 	if err != nil {
 		return nil, fmt.Errorf("csaf: failed to decode document: %w", err)
@@ -282,7 +288,7 @@ func Open(path string) (*CSAF, error) {
 
 // FirstProductName returns the first product name in the product tree
 // or an empty string if no product name is found.
-func (csafDoc *CSAF) FirstProductName() string {
+func (csafDoc *Document) FirstProductName() string {
 	return csafDoc.ProductTree.FindFirstProduct()
 }
 
@@ -396,7 +402,7 @@ func (branch *ProductBranch) ListProducts() ProductList {
 	return list
 }
 
-func (csafDoc *CSAF) ListProducts() ProductList {
+func (csafDoc *Document) ListProducts() ProductList {
 	prods := ProductList{}
 	for _, b := range csafDoc.ProductTree.Branches {
 		brachProds := b.ListProducts()

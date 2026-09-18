@@ -18,12 +18,15 @@ var PredicateType cattestation.PredicateType = "https://openvex.dev/ns/v0.2.0"
 var _ cattestation.Predicate = (*Predicate)(nil)
 
 type Predicate struct {
+	// The document is embedded through the vex.VEX alias on purpose: the
+	// alias name becomes the promoted field name, so callers can keep using
+	// Predicate.VEX. Embedding vex.Document would rename the field.
 	vex.VEX
 	verification cattestation.Verification `json:"-"`
 	origin       cattestation.Subject
 }
 
-func NewPredicate(doc *vex.VEX) *Predicate {
+func NewPredicate(doc *vex.Document) *Predicate {
 	if doc == nil {
 		d := vex.New()
 		doc = &d
