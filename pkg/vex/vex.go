@@ -176,12 +176,33 @@ func (vexDoc *Document) EffectiveStatement(product, vulnID string) (s *Statement
 
 	SortStatements(statements, t)
 
-	for i := len(statements) - 1; i >= 0; i-- {
-		if statements[i].Matches(vulnID, product, nil) {
-			return &statements[i]
+	// SortStatements orders by vulnerability name before timestamp, so the last
+	// matching statement is the one with the highest name, not the newest one.
+	// Aliases mean a single query legitimately matches statements filed under
+	// more than one name, so compare the timestamps of the matches instead.
+	var (
+		newest     *Statement
+		newestTime time.Time
+	)
+
+	for i := range statements {
+		if !statements[i].Matches(vulnID, product, nil) {
+			continue
+		}
+
+		stmtTime := t
+		if statements[i].Timestamp != nil && !statements[i].Timestamp.IsZero() {
+			stmtTime = *statements[i].Timestamp
+		}
+
+		// Not Before, so that the sort order still decides ties.
+		if newest == nil || !stmtTime.Before(newestTime) {
+			newest = &statements[i]
+			newestTime = stmtTime
 		}
 	}
-	return nil
+
+	return newest
 }
 
 // StatementFromID returns a statement for a given vulnerability if there is one.
