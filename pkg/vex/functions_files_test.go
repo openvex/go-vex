@@ -81,6 +81,34 @@ func TestOpenCSAF(t *testing.T) {
 	}
 }
 
+func TestOpenCSAFStatusOrder(t *testing.T) {
+	// The fixture lists three product statuses for a single CVE. Reading it
+	// has to give back the same statements in the same order every time, or
+	// the document and its canonical hash change on their own.
+	want := []Status{StatusFixed, StatusAffected, StatusNotAffected}
+
+	first, err := OpenCSAF("testdata/csaf-multistatus.json", []string{})
+	require.NoError(t, err)
+	wantHash, err := first.CanonicalHash()
+	require.NoError(t, err)
+
+	for i := range 25 {
+		doc, err := OpenCSAF("testdata/csaf-multistatus.json", []string{})
+		require.NoError(t, err)
+		require.Len(t, doc.Statements, len(want))
+
+		got := make([]Status, 0, len(doc.Statements))
+		for _, s := range doc.Statements {
+			got = append(got, s.Status)
+		}
+		require.Equal(t, want, got, "read %d", i)
+
+		hash, err := doc.CanonicalHash()
+		require.NoError(t, err)
+		require.Equal(t, wantHash, hash, "read %d", i)
+	}
+}
+
 func TestOpen(t *testing.T) {
 	for m, tc := range map[string]struct {
 		path      string
