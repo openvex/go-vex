@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -177,8 +179,11 @@ func OpenCSAF(path string, products []string) (*Document, error) {
 
 	// Cycle the CSAF vulns list and get those that apply
 	for i := range csafDoc.Vulnerabilities {
-		for status, docProducts := range csafDoc.Vulnerabilities[i].ProductStatus {
-			for _, productID := range docProducts {
+		// ProductStatus is a map, so walk it in sorted key order. Reading it
+		// directly puts the statements in a different order on every run,
+		// which changes the document's canonical hash and its @id.
+		for _, status := range slices.Sorted(maps.Keys(csafDoc.Vulnerabilities[i].ProductStatus)) {
+			for _, productID := range csafDoc.Vulnerabilities[i].ProductStatus[status] {
 				if _, ok := productDict[productID]; ok {
 					// Check we have a valid status
 					if StatusFromCSAF(status) == "" {
