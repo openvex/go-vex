@@ -102,8 +102,11 @@ type Metadata struct {
 	// the document or statement generation.
 	Tooling string `json:"tooling,omitempty"`
 
-	// Supplier is an optional field.
-	Supplier string `json:"supplier,omitempty"`
+	// Supplier is retained for source compatibility.
+	//
+	// Deprecated: OpenVEX no longer defines a document-level supplier. This field
+	// is ignored when encoding and decoding JSON.
+	Supplier string `json:"-"`
 }
 
 // New returns a new, initialized VEX document.
