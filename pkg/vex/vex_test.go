@@ -21,6 +21,35 @@ func TestEffectiveStatement(t *testing.T) {
 		expectedDate   *time.Time
 		expectedStatus Status
 	}{
+		"Newest statement wins when an alias puts an older one under a higher name": {
+			// SortStatements orders by vulnerability name first, and
+			// "GHSA-..." sorts above "CVE-...", so the older not_affected
+			// used to be returned for a query on the alias.
+			vexDoc: &Document{
+				Statements: []Statement{
+					{
+						Vulnerability: Vulnerability{
+							Name:    "GHSA-aaaa-bbbb-cccc",
+							Aliases: []VulnerabilityID{"CVE-2014-123456"},
+						},
+						Timestamp: &date1,
+						Products:  []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Status:    StatusNotAffected,
+					},
+					{
+						Vulnerability: Vulnerability{Name: "CVE-2014-123456"},
+						Timestamp:     &date2,
+						Products:      []Product{{Component: Component{ID: "pkg:deb/pkg@1.0"}}},
+						Status:        StatusAffected,
+					},
+				},
+			},
+			vulnID:         "CVE-2014-123456",
+			product:        "pkg:deb/pkg@1.0",
+			shouldNil:      false,
+			expectedDate:   &date2,
+			expectedStatus: StatusAffected,
+		},
 		"Single statement": {
 			vexDoc: &Document{
 				Statements: []Statement{
