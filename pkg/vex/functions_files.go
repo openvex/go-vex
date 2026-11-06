@@ -164,6 +164,26 @@ func OpenCSAF(path string, products []string) (*Document, error) {
 		}
 	}
 
+	// Relationships define products of their own (for example, a component
+	// that is part of another product) and product statuses can reference
+	// them. Keep them when unfiltered, when their ID was requested, or when
+	// either of the related products was selected.
+	for _, rel := range csafDoc.ProductTree.Relationships {
+		id := rel.FullProductName.ID
+		if id == "" {
+			continue
+		}
+		if len(filterDict) > 0 {
+			_, idOK := filterDict[id]
+			_, prodOK := productDict[rel.ProductRef]
+			_, relOK := productDict[rel.RelatesToProductRef]
+			if !idOK && !prodOK && !relOK {
+				continue
+			}
+		}
+		productDict[id] = rel.ProductRef
+	}
+
 	// Create the vex doc
 	v := &Document{
 		Metadata: Metadata{

@@ -1,0 +1,110 @@
+{
+  "document": {
+    "category": "csaf_vex",
+    "csaf_version": "2.0",
+    "publisher": {
+      "category": "vendor",
+      "name": "Example Company",
+      "namespace": "https://example.com"
+    },
+    "title": "Example image",
+    "tracking": {
+      "current_release_date": "2026-03-20T08:16:11.041Z",
+      "id": "2026-EVD-UC-02-AF-001",
+      "initial_release_date": "2026-03-20T08:16:11.041Z",
+      "revision_history": [
+        {
+          "date": "2026-03-20T08:16:11.041Z",
+          "number": "1",
+          "summary": "Initial release"
+        }
+      ],
+      "status": "final",
+      "version": "1"
+    }
+  },
+  "product_tree": {
+    "branches": [
+      {
+        "category": "product_version",
+        "name": "image 1.0.0",
+        "product": {
+          "name": "image",
+          "product_id": "main",
+          "product_identification_helper": {
+            "purl": "pkg:oci/image@sha256%3Aabc123"
+          }
+        }
+      },
+      {
+        "category": "product_version",
+        "name": "tar 7.5.7",
+        "product": {
+          "name": "tar",
+          "product_id": "pkg:npm/tar@7.5.7",
+          "product_identification_helper": {
+            "purl": "pkg:npm/tar@7.5.7"
+          }
+        }
+      },
+      {
+        "category": "product_version",
+        "name": "minimatch 9.0.6",
+        "product": {
+          "name": "minimatch",
+          "product_id": "pkg:npm/minimatch@9.0.6",
+          "product_identification_helper": {
+            "purl": "pkg:npm/minimatch@9.0.6"
+          }
+        }
+      }
+    ],
+    "relationships": [
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "pkg:npm/tar@7.5.7 is component of main",
+          "product_id": "rel-pkg:npm/tar@7.5.7"
+        },
+        "product_reference": "pkg:npm/tar@7.5.7",
+        "relates_to_product_reference": "main"
+      },
+      {
+        "category": "default_component_of",
+        "full_product_name": {
+          "name": "pkg:npm/minimatch@9.0.6 is component of main",
+          "product_id": "rel-pkg:npm/minimatch@9.0.6"
+        },
+        "product_reference": "pkg:npm/minimatch@9.0.6",
+        "relates_to_product_reference": "main"
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2026-29786",
+      "product_status": {
+        "known_affected": [
+          "rel-pkg:npm/tar@7.5.7"
+        ]
+      },
+      "threats": [
+        {
+          "category": "impact",
+          "details": "Upgrade to tar 7.5.10.",
+          "product_ids": [
+            "rel-pkg:npm/tar@7.5.7"
+          ]
+        }
+      ]
+    },
+    {
+      "cve": "CVE-2026-26996",
+      "product_status": {
+        "known_not_affected": [
+          "rel-pkg:npm/minimatch@9.0.6"
+        ]
+      }
+    }
+  ]
+}

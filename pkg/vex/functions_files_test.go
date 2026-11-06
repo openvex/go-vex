@@ -65,6 +65,26 @@ func TestLoadCSAF(t *testing.T) {
 	require.Equal(t, "2022-EVD-UC-01-NA-001", vexDoc.ID)
 }
 
+func TestOpenCSAFRelationships(t *testing.T) {
+	vexDoc, err := Open("testdata/csaf-relationships.json")
+	require.NoError(t, err)
+	require.Len(t, vexDoc.Statements, 2)
+
+	byVuln := map[string]Statement{}
+	for _, s := range vexDoc.Statements {
+		byVuln[string(s.Vulnerability.Name)] = s
+	}
+
+	require.Equal(t, StatusAffected, byVuln["CVE-2026-29786"].Status)
+	require.Len(t, byVuln["CVE-2026-29786"].Products, 1)
+	require.Equal(t, "rel-pkg:npm/tar@7.5.7", byVuln["CVE-2026-29786"].Products[0].ID)
+	require.Equal(t, "Upgrade to tar 7.5.10.", byVuln["CVE-2026-29786"].ActionStatement)
+
+	require.Equal(t, StatusNotAffected, byVuln["CVE-2026-26996"].Status)
+	require.Len(t, byVuln["CVE-2026-26996"].Products, 1)
+	require.Equal(t, "rel-pkg:npm/minimatch@9.0.6", byVuln["CVE-2026-26996"].Products[0].ID)
+}
+
 func TestOpenCSAF(t *testing.T) {
 	for _, tc := range []struct {
 		doc string
@@ -73,6 +93,11 @@ func TestOpenCSAF(t *testing.T) {
 	}{
 		{"testdata/csaf.json", 1, []string{"CSAFPID-0001"}},
 		{"testdata/csaf.json", 1, []string{"pkg:golang/github.com/go-homedir@v1.2.0"}},
+		{"testdata/csaf-relationships.json", 2, []string{}},
+		{"testdata/csaf-relationships.json", 2, []string{"pkg:oci/image@sha256%3Aabc123"}},
+		{"testdata/csaf-relationships.json", 1, []string{"pkg:npm/tar@7.5.7"}},
+		{"testdata/csaf-relationships.json", 1, []string{"rel-pkg:npm/minimatch@9.0.6"}},
+		{"testdata/csaf-relationships.json", 0, []string{"pkg:npm/other@1.0.0"}},
 	} {
 		doc, err := OpenCSAF(tc.doc, tc.id)
 		require.NoError(t, err)
