@@ -60,3 +60,56 @@ func TestStatementEmptyTimeStamp(t *testing.T) {
 		})
 	}
 }
+
+func statementAliasFixture() Document {
+	ts := time.Date(2023, 1, 2, 3, 4, 5, 0, time.UTC)
+	doc := New()
+	doc.Statements = []Statement{
+		{
+			Vulnerability: Vulnerability{
+				Name:    "CVE-2014-123456",
+				Aliases: []VulnerabilityID{"GHSA-1234-5678-9012"},
+			},
+			Timestamp: &ts,
+			Products: []Product{
+				{Component: Component{ID: "pkg:apk/wolfi/bash@1.0"}},
+			},
+			Status:        StatusNotAffected,
+			Justification: ComponentNotPresent,
+		},
+	}
+	return doc
+}
+
+func TestExtractStatementsDoesNotAliasDocumentData(t *testing.T) {
+	t.Parallel()
+
+	t.Run("timestamp", func(t *testing.T) {
+		t.Parallel()
+		doc := statementAliasFixture()
+		extracted := doc.ExtractStatements()
+		require.Len(t, extracted, 1)
+		require.NotSame(t, doc.Statements[0].Timestamp, extracted[0].Timestamp,
+			"extracted statement shares the document statement timestamp pointer")
+	})
+
+	t.Run("products", func(t *testing.T) {
+		t.Parallel()
+		doc := statementAliasFixture()
+		extracted := doc.ExtractStatements()
+		require.Len(t, extracted, 1)
+		extracted[0].Products[0].ID = "pkg:apk/wolfi/mutated@1.0"
+		require.Equal(t, "pkg:apk/wolfi/bash@1.0", doc.Statements[0].Products[0].ID,
+			"writing to the extracted product list modified the document")
+	})
+
+	t.Run("aliases", func(t *testing.T) {
+		t.Parallel()
+		doc := statementAliasFixture()
+		extracted := doc.ExtractStatements()
+		require.Len(t, extracted, 1)
+		extracted[0].Vulnerability.Aliases[0] = "GHSA-0000-0000-0000"
+		require.Equal(t, VulnerabilityID("GHSA-1234-5678-9012"), doc.Statements[0].Vulnerability.Aliases[0],
+			"writing to the extracted alias list modified the document")
+	})
+}
