@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 
 	intoto "github.com/in-toto/attestation/go/v1"
@@ -113,10 +114,14 @@ func productToSubject(p *vex.Product, resolver ImageDigestResolver) (*intoto.Res
 	}
 	key := id
 	if key == "" {
-		for a, h := range digest {
-			key = a + ":" + h
-			break
+		// Map iteration order is randomized, so take the algorithms in
+		// sorted order to keep the dedup key stable across runs.
+		algos := make([]string, 0, len(digest))
+		for a := range digest {
+			algos = append(algos, a)
 		}
+		slices.Sort(algos)
+		key = algos[0] + ":" + digest[algos[0]]
 	}
 	return sub, key, nil
 }
@@ -143,8 +148,15 @@ func productPrimaryID(p *vex.Product) string {
 	if id, ok := p.Identifiers[vex.PURL]; ok {
 		return id
 	}
-	for _, id := range p.Identifiers {
-		return id
+	// Map iteration order is randomized, so walk the identifier types in
+	// sorted order instead of taking whichever one comes out first.
+	types := make([]vex.IdentifierType, 0, len(p.Identifiers))
+	for t := range p.Identifiers {
+		types = append(types, t)
+	}
+	slices.Sort(types)
+	if len(types) > 0 {
+		return p.Identifiers[types[0]]
 	}
 	return ""
 }
