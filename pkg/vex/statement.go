@@ -232,40 +232,33 @@ func (stmt *Statement) MarshalJSON() ([]byte, error) {
 
 // DeepCopyInto copies the receiver and writes its value into out.
 func (stmt *Statement) DeepCopyInto(out *Statement) {
+	if out == nil {
+		return
+	}
 	*out = *stmt
 
 	if stmt.Timestamp != nil {
-		*out = *stmt
 		out.Timestamp = new(time.Time)
 		*out.Timestamp = *stmt.Timestamp
 	}
 
 	if stmt.LastUpdated != nil {
-		*out = *stmt
 		out.LastUpdated = new(time.Time)
 		*out.LastUpdated = *stmt.LastUpdated
 	}
 
+	if stmt.ActionStatementTimestamp != nil {
+		out.ActionStatementTimestamp = new(time.Time)
+		*out.ActionStatementTimestamp = *stmt.ActionStatementTimestamp
+	}
+
 	if stmt.Products != nil {
-		*out = *stmt
 		out.Products = make([]Product, len(stmt.Products))
 		copy(out.Products, stmt.Products)
 	}
 
-	*out = *stmt
 	out.Vulnerability = Vulnerability{}
 	stmt.Vulnerability.DeepCopyInto(&out.Vulnerability)
-
-	if stmt.Justification != "" {
-		*out = *stmt
-		out.Justification = stmt.Justification
-	}
-
-	if stmt.ActionStatementTimestamp != nil {
-		*out = *stmt
-		out.ActionStatementTimestamp = new(time.Time)
-		*out.ActionStatementTimestamp = *stmt.ActionStatementTimestamp
-	}
 }
 
 // DeepCopy copies the receiver and returns a new Statement.
