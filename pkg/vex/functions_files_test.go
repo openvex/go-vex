@@ -73,12 +73,29 @@ func TestOpenCSAF(t *testing.T) {
 	}{
 		{"testdata/csaf.json", 1, []string{"CSAFPID-0001"}},
 		{"testdata/csaf.json", 1, []string{"pkg:golang/github.com/go-homedir@v1.2.0"}},
+		{"testdata/csaf-full-product-names.json", 2, []string{}},
+		{"testdata/csaf-full-product-names.json", 1, []string{"CSAFPID-0001"}},
+		{"testdata/csaf-full-product-names.json", 1, []string{"pkg:npm/minimist@1.2.5"}},
 	} {
 		doc, err := OpenCSAF(tc.doc, tc.id)
 		require.NoError(t, err)
 		require.NotNil(t, doc)
 		require.Len(t, doc.Statements, tc.len)
 	}
+}
+
+func TestOpenCSAFFullProductNames(t *testing.T) {
+	doc, err := Open("testdata/csaf-full-product-names.json")
+	require.NoError(t, err)
+	require.Len(t, doc.Statements, 2)
+
+	byProduct := map[string]Statement{}
+	for _, s := range doc.Statements {
+		require.Len(t, s.Products, 1)
+		byProduct[s.Products[0].ID] = s
+	}
+	require.Equal(t, StatusNotAffected, byProduct["CSAFPID-0001"].Status)
+	require.Equal(t, StatusAffected, byProduct["CSAFPID-0002"].Status)
 }
 
 func TestOpen(t *testing.T) {
