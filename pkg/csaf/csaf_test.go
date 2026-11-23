@@ -4,6 +4,7 @@
 package csaf
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,6 +29,21 @@ func TestOpen(t *testing.T) {
 	require.Equal(t, "CSAFPID-0001", doc.Vulnerabilities[0].ProductStatus["known_not_affected"][0])
 	require.Equal(t, "CVE-2009-4488", doc.Vulnerabilities[1].CVE)
 	require.Equal(t, "https://example.com/foo/v1.2.3/mitigation", doc.Vulnerabilities[1].Remediations[0].URL)
+}
+
+func TestParse(t *testing.T) {
+	data, err := os.ReadFile("testdata/csaf.json")
+	require.NoError(t, err)
+
+	doc, err := Parse(data)
+	require.NoError(t, err)
+
+	want, err := Open("testdata/csaf.json")
+	require.NoError(t, err)
+	require.Equal(t, want, doc)
+
+	_, err = Parse([]byte("not json"))
+	require.Error(t, err)
 }
 
 func TestOpenRHAdvisory(t *testing.T) {

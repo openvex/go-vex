@@ -6,8 +6,8 @@ package vex
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -87,6 +87,19 @@ func Open(path string) (*Document, error) {
 		return nil, fmt.Errorf("opening VEX file: %w", err)
 	}
 
+	doc, err := ParseAny(data)
+	if err != nil {
+		return nil, fmt.Errorf("opening %s: %w", path, err)
+	}
+	return doc, nil
+}
+
+// ParseAny parses a document from the data byte array like Open does for a
+// file: it detects the OpenVEX version from the @context and converts older
+// versions and CSAF documents to the current OpenVEX version. Use it instead of
+// Parse when the data may not be in the latest OpenVEX version, for example
+// when it comes from a registry or an HTTP response.
+func ParseAny(data []byte) (*Document, error) {
 	documentContextLocator, err := parseContext(data)
 	if err != nil {
 		return nil, err
@@ -117,16 +130,18 @@ func Open(path string) (*Document, error) {
 	}
 
 	if bytes.Contains(data, []byte(`"csaf_version"`)) {
-		slog.Info("Abriendo CSAF")
-
-		doc, err := OpenCSAF(path, []string{})
+		csafDoc, err := csaf.Parse(data)
 		if err != nil {
-			return nil, fmt.Errorf("attempting to open csaf doc: %w", err)
+			return nil, fmt.Errorf("attempting to parse csaf doc: %w", err)
+		}
+		doc, err := fromCSAF(csafDoc, []string{})
+		if err != nil {
+			return nil, fmt.Errorf("attempting to parse csaf doc: %w", err)
 		}
 		return doc, nil
 	}
 
-	return nil, fmt.Errorf("unable to detect document format reading %s", path)
+	return nil, errors.New("unable to detect document format")
 }
 
 // OpenCSAF opens a CSAF document and builds a VEX Document from it.
@@ -136,6 +151,12 @@ func OpenCSAF(path string, products []string) (*Document, error) {
 		return nil, fmt.Errorf("opening csaf doc: %w", err)
 	}
 
+	return fromCSAF(csafDoc, products)
+}
+
+// fromCSAF builds a VEX Document from a CSAF document, keeping only the
+// given products if any are listed.
+func fromCSAF(csafDoc *csaf.Document, products []string) (*Document, error) {
 	productDict := map[string]string{}
 	filterDict := map[string]string{}
 	for _, pid := range products {
