@@ -101,3 +101,36 @@ func TestOpen(t *testing.T) {
 		require.NotNil(t, doc, m)
 	}
 }
+
+func TestParseAny(t *testing.T) {
+	for m, tc := range map[string]struct {
+		path      string
+		shouldErr bool
+	}{
+		"OpenVEX v0.0.1":              {"testdata/v0.0.1.json", false},
+		"OpenVEX v0.0.1 (no version)": {"testdata/v0.0.1-noversion.json", false},
+		"OpenVEX v0.2.0":              {"testdata/v0.2.0.json", false},
+		"CSAF document":               {"testdata/csaf.json", false},
+	} {
+		data, err := os.ReadFile(tc.path)
+		require.NoError(t, err, m)
+
+		doc, err := ParseAny(data)
+		if tc.shouldErr {
+			require.Error(t, err, m)
+			continue
+		}
+		require.NoError(t, err, m)
+
+		// ParseAny must return the same document as Open for the same file.
+		want, err := Open(tc.path)
+		require.NoError(t, err, m)
+		require.Equal(t, want, doc, m)
+	}
+
+	_, err := ParseAny([]byte(`{"hello": "world"}`))
+	require.Error(t, err)
+
+	_, err = ParseAny([]byte(`not json`))
+	require.Error(t, err)
+}

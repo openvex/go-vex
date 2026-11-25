@@ -286,6 +286,16 @@ func Open(path string) (*Document, error) {
 	return csafDoc, nil
 }
 
+// Parse parses a CSAF document from the data byte array.
+func Parse(data []byte) (*Document, error) {
+	csafDoc := &Document{}
+	if err := json.Unmarshal(data, csafDoc); err != nil {
+		return nil, fmt.Errorf("csaf: failed to decode document: %w", err)
+	}
+
+	return csafDoc, nil
+}
+
 // FirstProductName returns the first product name in the product tree
 // or an empty string if no product name is found.
 func (csafDoc *Document) FirstProductName() string {
