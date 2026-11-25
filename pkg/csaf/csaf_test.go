@@ -4,6 +4,7 @@
 package csaf
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -99,4 +100,24 @@ func TestAddEmptyProduct(t *testing.T) {
 	list.Add(product)
 
 	require.Empty(t, list)
+}
+
+func TestFullProductNames(t *testing.T) {
+	doc := &Document{}
+	require.NoError(t, json.Unmarshal([]byte(`{"product_tree": {
+		"full_product_names": [
+			{"name": "minimist 1.2.5", "product_id": "CSAFPID-0001",
+			 "product_identification_helper": {"purl": "pkg:npm/minimist@1.2.5"}}
+		]
+	}}`), doc))
+
+	require.Equal(t, "CSAFPID-0001", doc.FirstProductName())
+	require.Equal(t, "minimist 1.2.5", doc.ProductTree.FindFirstProductName())
+
+	p := doc.ProductTree.FindProductIdentifier("purl", "pkg:npm/minimist@1.2.5")
+	require.NotNil(t, p)
+	require.Equal(t, "CSAFPID-0001", p.ID)
+
+	require.Len(t, doc.ListProducts(), 1)
+	require.Len(t, doc.ProductTree.ListProducts(), 1)
 }

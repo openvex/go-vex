@@ -19,7 +19,8 @@ type Document struct {
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#321-document-property
 	Document DocumentMetadata `json:"document"`
 
-	// ProductTree contains information about the product tree (branches only).
+	// ProductTree contains information about the product tree: its branches,
+	// the products listed directly under full_product_names, and relationships.
 	//
 	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#322-product-tree-property
 	ProductTree ProductBranch `json:"product_tree"`
@@ -197,6 +198,12 @@ type ProductBranch struct {
 	Branches      []ProductBranch `json:"branches"`
 	Product       Product         `json:"product,omitempty"`
 	Relationships []Relationship  `json:"relationships"`
+
+	// FullProductNames lists products defined without a branch. CSAF only
+	// allows it at the root of the product tree.
+	//
+	// https://docs.oasis-open.org/csaf/csaf/v2.0/os/csaf-v2.0-os.html#3222-product-tree-property---full-product-names
+	FullProductNames []Product `json:"full_product_names"`
 }
 
 // Relationship establishes a link between two existing full_product_name_t elements, allowing
@@ -299,15 +306,16 @@ func (branch *ProductBranch) FindFirstProduct() string {
 		return branch.Product.ID
 	}
 
-	// No nested branches
-	if branch.Branches == nil {
-		return ""
-	}
-
 	// Recursively search for the first product	identifier
 	for _, b := range branch.Branches {
 		if p := b.FindFirstProduct(); p != "" {
 			return p
+		}
+	}
+
+	for _, p := range branch.FullProductNames {
+		if p.ID != "" {
+			return p.ID
 		}
 	}
 
@@ -321,15 +329,16 @@ func (branch *ProductBranch) FindFirstProductName() string {
 		return branch.Product.Name
 	}
 
-	// No nested branches
-	if branch.Branches == nil {
-		return ""
-	}
-
 	// Recursively search for the first product	identifier
 	for _, b := range branch.Branches {
 		if p := b.FindFirstProductName(); p != "" {
 			return p
+		}
+	}
+
+	for _, p := range branch.FullProductNames {
+		if p.Name != "" {
+			return p.Name
 		}
 	}
 
@@ -338,26 +347,20 @@ func (branch *ProductBranch) FindFirstProductName() string {
 
 // FindProductIdentifier recursively searches for the first product identifier in the tree
 func (branch *ProductBranch) FindProductIdentifier(helperType, helperValue string) *Product {
-	if len(branch.Product.IdentificationHelper) != 0 {
-		for k := range branch.Product.IdentificationHelper {
-			if k != helperType {
-				continue
-			}
-			if branch.Product.IdentificationHelper[k] == helperValue {
-				return &branch.Product
-			}
-		}
-	}
-
-	// No nested branches
-	if branch.Branches == nil {
-		return nil
+	if v, ok := branch.Product.IdentificationHelper[helperType]; ok && v == helperValue {
+		return &branch.Product
 	}
 
 	// Recursively search for the first identifier
 	for _, b := range branch.Branches {
 		if p := b.FindProductIdentifier(helperType, helperValue); p != nil {
 			return p
+		}
+	}
+
+	for i := range branch.FullProductNames {
+		if v, ok := branch.FullProductNames[i].IdentificationHelper[helperType]; ok && v == helperValue {
+			return &branch.FullProductNames[i]
 		}
 	}
 
@@ -399,6 +402,9 @@ func (branch *ProductBranch) ListProducts() ProductList {
 			list.Add(p)
 		}
 	}
+	for _, p := range branch.FullProductNames {
+		list.Add(p)
+	}
 	return list
 }
 
@@ -409,6 +415,9 @@ func (csafDoc *Document) ListProducts() ProductList {
 		for _, sp := range brachProds {
 			prods.Add(sp)
 		}
+	}
+	for _, p := range csafDoc.ProductTree.FullProductNames {
+		prods.Add(p)
 	}
 	return prods
 }

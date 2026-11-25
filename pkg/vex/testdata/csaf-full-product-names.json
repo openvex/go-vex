@@ -1,0 +1,71 @@
+{
+  "document": {
+    "category": "csaf_vex",
+    "csaf_version": "2.0",
+    "publisher": {
+      "category": "vendor",
+      "name": "Example",
+      "namespace": "https://example.com"
+    },
+    "title": "Products listed under full_product_names",
+    "tracking": {
+      "current_release_date": "2026-09-01T00:00:00.000Z",
+      "id": "2026-EX-FPN-001",
+      "initial_release_date": "2026-09-01T00:00:00.000Z",
+      "revision_history": [
+        {
+          "date": "2026-09-01T00:00:00.000Z",
+          "number": "1",
+          "summary": "Initial release"
+        }
+      ],
+      "status": "final",
+      "version": "1"
+    }
+  },
+  "product_tree": {
+    "branches": [
+      {
+        "category": "product_version",
+        "name": "1.0.0",
+        "product": {
+          "name": "example-app 1.0.0",
+          "product_id": "CSAFPID-0002",
+          "product_identification_helper": {
+            "purl": "pkg:npm/example-app@1.0.0"
+          }
+        }
+      }
+    ],
+    "full_product_names": [
+      {
+        "name": "minimist 1.2.5",
+        "product_id": "CSAFPID-0001",
+        "product_identification_helper": {
+          "purl": "pkg:npm/minimist@1.2.5"
+        }
+      }
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "cve": "CVE-2021-44906",
+      "product_status": {
+        "known_not_affected": [
+          "CSAFPID-0001"
+        ],
+        "known_affected": [
+          "CSAFPID-0002"
+        ]
+      },
+      "flags": [
+        {
+          "label": "vulnerable_code_not_in_execute_path",
+          "product_ids": [
+            "CSAFPID-0001"
+          ]
+        }
+      ]
+    }
+  ]
+}
