@@ -385,6 +385,60 @@ func TestDocumentMatches(t *testing.T) {
 	}
 }
 
+func TestDocumentMatchesOrder(t *testing.T) {
+	product := "pkg:npm/minimist@1.2.5"
+	vuln := "CVE-2021-44906"
+	ts := func(s string) *time.Time {
+		tm, err := time.Parse(time.RFC3339, s)
+		require.NoError(t, err)
+		return &tm
+	}
+	stmt := func(status Status, when *time.Time, note string) Statement {
+		return Statement{
+			Vulnerability: Vulnerability{Name: VulnerabilityID(vuln)},
+			Products:      []Product{{Component: Component{ID: product}}},
+			Status:        status,
+			Timestamp:     when,
+			StatusNotes:   note,
+		}
+	}
+
+	for name, tc := range map[string]struct {
+		statements []Statement
+		want       []string
+	}{
+		"oldest first, latest last": {
+			statements: []Statement{
+				stmt(StatusAffected, ts("2026-09-20T00:00:00Z"), "second"),
+				stmt(StatusNotAffected, ts("2026-09-01T00:00:00Z"), "first"),
+			},
+			want: []string{"first", "second"},
+		},
+		"equal timestamps keep document order": {
+			statements: []Statement{
+				stmt(StatusUnderInvestigation, ts("2026-09-01T00:00:00Z"), "a"),
+				stmt(StatusAffected, ts("2026-09-01T00:00:00Z"), "b"),
+			},
+			want: []string{"a", "b"},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			doc := &Document{Metadata: Metadata{Timestamp: ts("2026-10-01T00:00:00Z")}, Statements: tc.statements}
+			matches := doc.Matches(vuln, product, nil)
+			got := make([]string, 0, len(matches))
+			for _, m := range matches {
+				got = append(got, m.StatusNotes)
+			}
+			require.Equal(t, tc.want, got)
+
+			// The last match is the statement EffectiveStatement picks.
+			effective := doc.EffectiveStatement(product, vuln)
+			require.NotNil(t, effective)
+			require.Equal(t, matches[len(matches)-1].StatusNotes, effective.StatusNotes)
+		})
+	}
+}
+
 func TestParseContext(t *testing.T) {
 	for tCase, tc := range map[string]struct {
 		docData   string

@@ -221,9 +221,15 @@ func (vexDoc *Document) StatementFromID(id string) *Statement {
 	return nil
 }
 
-// Matches returns the latest VEX statement for a given product and
-// vulnerability. That is, the statement that contains the latest data with
-// impact data of a vulnerability on a given product.
+// Matches returns every VEX statement in the document that applies to the
+// given vulnerability, product and subcomponents, not just the latest one.
+//
+// The statements are sorted with SortStatements: by vulnerability name, then
+// oldest first, with statements that have no timestamp taking the document
+// timestamp. Statements with equal timestamps keep their document order. When
+// all matches share a vulnerability name, the last one is the latest. Matches
+// can be filed under different names when a query hits aliases, so use
+// EffectiveStatement to get the statement that currently applies.
 func (vexDoc *Document) Matches(vulnID, product string, subcomponents []string) []Statement {
 	statements := vexDoc.Statements
 	var t time.Time
@@ -233,7 +239,9 @@ func (vexDoc *Document) Matches(vulnID, product string, subcomponents []string) 
 
 	matches := []Statement{}
 
-	for i := len(statements) - 1; i >= 0; i-- {
+	// Collect in document order so that, after the stable sort, ties are
+	// broken the same way as in EffectiveStatement.
+	for i := range statements {
 		if statements[i].Matches(vulnID, product, subcomponents) {
 			matches = append(matches, statements[i])
 		}
