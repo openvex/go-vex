@@ -310,3 +310,57 @@ func TestImportNoResolverNoDigestBestEffortSkips(t *testing.T) {
 	require.Len(t, att.Subject, 1, "unresolvable purl is skipped; the one with an embedded digest is kept")
 	require.Equal(t, "good@sha256:abc", att.Subject[0].GetName())
 }
+
+func TestImportProductsIsDeterministic(t *testing.T) {
+	t.Run("primary id picked from several identifiers", func(t *testing.T) {
+		doc := vexWithProducts(vex.Product{Component: vex.Component{
+			Identifiers: map[vex.IdentifierType]string{
+				vex.CPE22: "cpe:/a:vendor:product:1.0",
+				vex.CPE23: "cpe:2.3:a:vendor:product:1.0:*:*:*:*:*:*:*",
+			},
+			Hashes: map[vex.Algorithm]vex.Hash{vex.SHA256: "aaa"},
+		}})
+
+		names := map[string]struct{}{}
+		for range 200 {
+			att := New(WithPredicate(&doc))
+			require.Len(t, att.Subject, 1)
+			names[att.Subject[0].GetName()] = struct{}{}
+		}
+		require.Len(t, names, 1, "subject name is not stable across runs, got %d distinct values", len(names))
+	})
+
+	t.Run("dedup key built from several hashes", func(t *testing.T) {
+		ts := time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)
+		prod := vex.Product{Component: vex.Component{
+			Hashes: map[vex.Algorithm]vex.Hash{vex.SHA256: "aaa", vex.SHA512: "bbb"},
+		}}
+		stmt := vex.Statement{
+			Vulnerability: vex.Vulnerability{Name: "CVE-2024-1234"},
+			Status:        vex.StatusNotAffected,
+			Justification: vex.VulnerableCodeNotPresent,
+			Timestamp:     &ts,
+			Products:      []vex.Product{prod},
+		}
+		doc := vex.Document{
+			Metadata: vex.Metadata{
+				Context:   vex.ContextLocator(),
+				ID:        "https://openvex.dev/docs/test/import",
+				Author:    "mailto:test@example.com",
+				Timestamp: &ts,
+				Version:   1,
+			},
+			Statements: []vex.Statement{stmt, stmt},
+		}
+
+		counts := map[int]struct{}{}
+		for range 200 {
+			att := New(WithPredicate(&doc))
+			counts[len(att.Subject)] = struct{}{}
+		}
+		require.Len(t, counts, 1, "number of imported subjects is not stable across runs")
+		for n := range counts {
+			require.Equal(t, 1, n, "the same product was imported as two subjects")
+		}
+	})
+}
