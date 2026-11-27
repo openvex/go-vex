@@ -98,6 +98,18 @@ func TestCheckCPEDispatch(t *testing.T) {
 		{name: "a short CPE 2.3", cpe: "cpe:2.3:a:apache", wantCount: 1},
 		{name: "an overlong CPE 2.2", cpe: "cpe:/a:b:c:d:e:f:g:h", wantCount: 1},
 		{name: "neither flavor", cpe: "cpe:apache:log4j", wantCount: 1},
+		{name: "a CPE 2.3 with an unknown part", cpe: "cpe:2.3:x:apache:log4j:2.4:*:*:*:*:*:*:*", wantCount: 1},
+		{name: "a CPE 2.3 with empty components", cpe: "cpe:2.3:a:apache:log4j:2.4:::::::", wantCount: 1},
+		{name: "a CPE 2.3 with an empty part", cpe: "cpe:2.3::apache:log4j:2.4:*:*:*:*:*:*:*", wantCount: 1},
+		{name: "a CPE 2.3 with an unknown part and empty components", cpe: "cpe:2.3:x:apache:log4j:2.4:::::::", wantCount: 2},
+		{name: "a CPE 2.3 with an any part", cpe: "cpe:2.3:*:apache:log4j:2.4:*:*:*:*:*:*:*"},
+		{name: "a CPE 2.3 with not applicable components", cpe: "cpe:2.3:o:linux:linux_kernel:6.1:-:-:-:-:-:-:-"},
+		{name: "a CPE 2.2 with an unknown part", cpe: "cpe:/x:apache:log4j:2.4", wantCount: 1},
+		{name: "a CPE 2.2 with an uppercase part", cpe: "cpe:/A:apache:log4j:2.4", wantCount: 1},
+		{name: "a CPE 2.2 with an empty part", cpe: "cpe:/:apache:log4j:2.4"},
+		{name: "a CPE 2.2 with a not applicable part", cpe: "cpe:/-:apache:log4j"},
+		{name: "a CPE 2.2 hardware part", cpe: "cpe:/h:cisco:router"},
+		{name: "a CPE 2.2 with empty components", cpe: "cpe:/a:apache::2.4"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()

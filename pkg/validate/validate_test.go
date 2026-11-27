@@ -567,6 +567,18 @@ func TestDocumentComponents(t *testing.T) {
 			want: []expected{},
 		},
 		{
+			name: "CPEs with an unknown part and empty components",
+			doc: product(t, `{"identifiers": {
+				"cpe22": "cpe:/x:apache:log4j:2.4",
+				"cpe23": "cpe:2.3:x:apache:log4j:2.4:::::::"
+			}}`),
+			want: []expected{
+				{SeverityError, CheckCPE, stmt0Product + ".identifiers.cpe22"},
+				{SeverityError, CheckCPE, stmt0Product + ".identifiers.cpe23"},
+				{SeverityError, CheckCPE, stmt0Product + ".identifiers.cpe23"},
+			},
+		},
+		{
 			name: "an overlong CPE 2.2",
 			doc:  product(t, `{"identifiers": {"cpe22": "cpe:/a:b:c:d:e:f:g:h"}}`),
 			want: []expected{{SeverityError, CheckCPE, stmt0Product + ".identifiers.cpe22"}},

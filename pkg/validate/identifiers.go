@@ -27,6 +27,16 @@ const (
 	cpe22Components = 7
 )
 
+var (
+	// cpe22Parts are the values the part component of a CPE 2.2 URI can take
+	// besides being left empty.
+	cpe22Parts = []string{"a", "o", "h", "-"}
+
+	// cpe23Parts are the values the part component of a CPE 2.3 formatted
+	// string can take.
+	cpe23Parts = []string{"a", "o", "h", "*", "-"}
+)
+
 // hashLengths maps the hash algorithms OpenVEX names to the length of their
 // hexadecimal representation.
 var hashLengths = map[vex.Algorithm]int{
@@ -115,11 +125,31 @@ func (r *Result) checkCPE23(cpe, path string) {
 		return
 	}
 
-	if parts := splitCPE(cpe); len(parts) != cpe23Components {
+	parts := splitCPE(cpe)
+	if len(parts) != cpe23Components {
 		r.errorf(
 			CheckCPE, path,
 			"a CPE 2.3 identifier has %d colon separated components, %q has %d; unused components are written as \"*\"",
 			cpe23Components, cpe, len(parts),
+		)
+		return
+	}
+
+	// NIST IR 7695 section 6.2: every attribute of a formatted string is a
+	// value, "*" for ANY or "-" for NA. None of them may be left empty.
+	if slices.Contains(parts[2:], "") {
+		r.errorf(
+			CheckCPE, path,
+			"%q has empty components; a CPE 2.3 identifier writes unused components as \"*\" (any) or \"-\" (not applicable)",
+			cpe,
+		)
+	}
+
+	if part := parts[2]; part != "" && !slices.Contains(cpe23Parts, part) {
+		r.errorf(
+			CheckCPE, path,
+			"%q is not a CPE part, the part of %q must be one of %s",
+			part, cpe, strings.Join(cpe23Parts, ", "),
 		)
 	}
 }
@@ -131,11 +161,23 @@ func (r *Result) checkCPE22(cpe, path string) {
 		return
 	}
 
-	if parts := splitCPE(strings.TrimPrefix(cpe, cpe22Prefix)); len(parts) > cpe22Components {
+	parts := splitCPE(strings.TrimPrefix(cpe, cpe22Prefix))
+	if len(parts) > cpe22Components {
 		r.errorf(
 			CheckCPE, path,
 			"a CPE 2.2 identifier has at most %d colon separated components, %q has %d",
 			cpe22Components, cpe, len(parts),
+		)
+		return
+	}
+
+	// NIST IR 7695 section 6.1: the part of a URI is a, o or h, or it is left
+	// empty (ANY) or written as "-" (NA).
+	if part := parts[0]; part != "" && !slices.Contains(cpe22Parts, part) {
+		r.errorf(
+			CheckCPE, path,
+			"%q is not a CPE part, the part of %q must be one of %s, or left empty",
+			part, cpe, strings.Join(cpe22Parts, ", "),
 		)
 	}
 }
